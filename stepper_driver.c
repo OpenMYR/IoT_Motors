@@ -34,8 +34,20 @@ void step_driver ( void )
 		system_os_post(ACK_TASK_PRIO, 0, 0);
 	}
 	else
-	{
-		system_os_post(MOTOR_DRIVER_TASK_PRIO, 0, 0);
+	{		
+		rate_counter += rate_incrementor;
+		//stepping logic
+		if(eio_read(GPIO_STEP))
+		{
+			eio_low(GPIO_STEP);
+		}
+		else if(rate_counter >= step_threshold)
+		{
+			rate_counter -= step_threshold;
+			if(motor_dir != PAUSED) eio_high(GPIO_STEP) ;
+			step_pool--;
+			stepper_position += motor_dir;
+		}
 	}
 }
 
@@ -74,28 +86,12 @@ void opcode_stop(signed int wait_time, unsigned short precision)
 
 float calculate_step_incrementor(unsigned short input_step_rate)
 {
-	return 10 * input_step_rate / PULSE_FREQUENCY;
+	return input_step_rate / PULSE_FREQUENCY;
 }
 
 void driver_logic_task(os_event_t *events)
 {
-		rate_counter += rate_incrementor;
-		//stepping logic
-		if(eio_read(GPIO_STEP))
-		{
-			eio_low(GPIO_STEP);
-		}
-		else
-		{
-			if(rate_counter >= step_threshold)
-			{
-				eio_high(GPIO_STEP) ;
-				rate_counter -= step_threshold;
-				if(motor_dir != PAUSED) eio_high(GPIO_STEP) ;
-				step_pool--;
-				stepper_position += motor_dir;
-			}
-		}
+
 }
 
 int is_motor_running()

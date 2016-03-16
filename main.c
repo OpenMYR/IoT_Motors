@@ -34,9 +34,9 @@ void user_init()
 	os_printf ( "Ready 1\n");
 
     eio_low ( GPIO_STEP );
-	eio_low( 0 );
-    eio_low ( 14 );
-    eio_low ( 12 );
+	eio_high( 0 );
+    eio_high( 14 );
+    eio_high( 12 );
     eio_low ( GPIO_STEP_DIR);
 	eio_low(GPIO_STEP_ENABLE);
 	os_printf ( "Ready 2\n");
