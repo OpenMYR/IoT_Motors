@@ -24,14 +24,14 @@ stepper_driver: $(OBJECTS) stepper_driver.o
 servo_driver: $(OBJECTS) servo_driver.o 
 
 main.o: main.c
-hw_timer.o: hw_timer.c
-gpio_driver.o: gpio_driver.c
-command_layer.o: command_layer.c
-servo_driver.o: servo_driver.c
-stepper_driver.o: stepper_driver.c
-udp.o: udp.c
-wifi.o: wifi.c
-op_queue.o: op_queue.c
+hw_timer.o: hw_timer.c hw_timer.h
+gpio_driver.o: gpio_driver.c gpio_driver.h
+command_layer.o: command_layer.c command_layer.h
+servo_driver.o: servo_driver.c motor_driver.h
+stepper_driver.o: stepper_driver.c motor_driver.h
+udp.o: udp.c udp.h
+wifi.o: wifi.c wifi.h
+op_queue.o: op_queue.c op_queue.h
 
 flash-servo: clean-servo servo_driver-0x00000.bin
 	esptool.py --port /dev/ttyAMA0 write_flash 0 servo_driver-0x00000.bin 0x40000 servo_driver-0x40000.bin
