@@ -14,7 +14,8 @@ static uint8 remote_ip[4] = { 0, 0, 0, 0 };
 static struct _esp_udp udp_params;
 static struct espconn udp_server;
 
-void (*packet_callback)(struct stepper_command_packet *, uint8 *ip_addr) = NULL;
+void (*motor_packet_callback)(struct stepper_command_packet *, uint8 *ip_addr) = NULL;
+void (*wifi_packet_callback)(struct wifi_command_packet *, uint8 *ip_addr) = NULL;
 
 uint16 ntohs( uint16 input )
 {
@@ -29,16 +30,22 @@ int32 ntohl( int32 input )
 
 void udp_recv_callback(void *arg, char *pdata, unsigned short len)
 {
-	 if(len != PACKET_LEN_BYTES)
-    {
-        os_printf("Packet incorrect size! Frog blast the vent core!\n");
-        return;
-    }
-    struct espconn *orig_connection = (struct espconn*)arg;
-    remot_info *remote = NULL;
-
-    espconn_get_connection_info(orig_connection, &remote, 0);
-	packet_callback(pdata,  remote->remote_ip);
+	struct espconn *orig_connection = (struct espconn*)arg;
+	remot_info *remote = NULL;
+	espconn_get_connection_info(orig_connection, &remote, 0);
+	if(len == CTRL_PACKET_LEN_BYTES)
+	{
+		motor_packet_callback(pdata,  remote->remote_ip);
+	}
+	else if(len == WIFI_PACKET_LEN_BYTES)
+	{
+		wifi_packet_callback(pdata,  remote->remote_ip);
+	}
+	else
+	{
+		os_printf("Packet incorrect size! Frog blast the vent core!\n");
+	}
+	
 }
 
 void udp_send_callback(void *arg)
@@ -97,7 +104,12 @@ void udp_send_ack( char opcode, int position, uint8 *ip_addr, unsigned short por
 	espconn_send(&udp_server, &ack, 5);
 }
 
-void register_udp_packet_callback(void (*process_callback)(struct stepper_command_packet *, uint8 *ip_addr))
+void register_motor_packet_callback(void (*motor_process_callback)(struct stepper_command_packet *, uint8 *ip_addr))
 {
-	packet_callback = process_callback;
+	motor_packet_callback = motor_process_callback;
+}
+
+void register_wifi_packet_callback(void (*wifi_process_callback)(struct wifi_command_packet *, uint8 *ip_addr))
+{
+	wifi_packet_callback = wifi_process_callback;
 }

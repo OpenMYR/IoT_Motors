@@ -4,7 +4,8 @@
 #include "c_types.h"
 #include "ip_addr.h"
 
-#define PACKET_LEN_BYTES 10
+#define CTRL_PACKET_LEN_BYTES 10
+#define WIFI_PACKET_LEN_BYTES 96
 
 uint16 ntohs( uint16 input );
 int32 ntohl( int32 input );
@@ -26,6 +27,12 @@ struct command_response_packet {
 	int position;
 };
 
-void register_udp_packet_callback(void (*packet_callback)(struct stepper_command_packet *, uint8 *ip_addr));
+struct wifi_command_packet {
+	char opcode;
+	char ssid[32] ;
+	char password[63];
+};
 
+void register_motor_packet_callback(void (*packet_callback)(struct stepper_command_packet *, uint8 *ip_addr));
+void register_wifi_packet_callback(void (*packet_callback)(struct wifi_command_packet *, uint8 *ip_addr));
 #endif

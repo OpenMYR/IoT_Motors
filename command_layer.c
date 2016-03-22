@@ -6,6 +6,7 @@
 #include "osapi.h"
 #include "user_config.h"
 #include "user_interface.h"
+#include "wifi.h"
 
 os_event_t task_queue[TASK_QUEUE_LENGTH];
 
@@ -14,17 +15,19 @@ uint8 command_address[4];
 
 void initialize_command_layer()
 {
-	register_udp_packet_callback(*process_command);
+	wifi_init();
+	register_motor_packet_callback(*motor_process_command);
+	register_wifi_packet_callback(*wifi_process_command);
 	
 	system_os_task(acknowledge_command, ACK_TASK_PRIO, task_queue, TASK_QUEUE_LENGTH);
 	system_os_task(driver_logic_task, MOTOR_DRIVER_TASK_PRIO, task_queue, TASK_QUEUE_LENGTH);
 	
-    hw_timer_init(FRC1_SOURCE, 1);
-    hw_timer_set_func(step_driver);
+	hw_timer_init(FRC1_SOURCE, 1);
+	hw_timer_set_func(step_driver);
 	hw_timer_arm(RESOLUTION_US);
 }
 
-void process_command(struct stepper_command_packet *packet, uint8 *ip_addr)
+void motor_process_command(struct stepper_command_packet *packet, uint8 *ip_addr)
 {
 	
 	if (packet->queue && ( !is_queue_empty() ||  is_motor_running() ) )
@@ -40,6 +43,27 @@ void process_command(struct stepper_command_packet *packet, uint8 *ip_addr)
 		command_address[3] = ip_addr[3];
 		issue_command();
 		clear_queue();
+	}
+	
+}
+
+void wifi_process_command(struct wifi_command_packet *packet, uint8 *ip_addr)
+{
+	if(packet->opcode == 'C')
+	{
+		os_printf("Connect to a network\n");
+	}
+	else if(packet->opcode == 'D')
+	{
+		os_printf("Disconnect from this network and resume broadcasting\n");
+	}
+	else if(packet->opcode == 'N')
+	{
+		os_printf("Mesh Node\n");
+	}
+	else
+	{
+		os_printf("Opcode not found!\n");
 	}
 	
 }
