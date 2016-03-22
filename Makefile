@@ -8,7 +8,7 @@ STEPPER_OUTPUT = stepper_driver stepper_driver.o stepper_driver-0x00000.bin step
 SERVO_OUTPUT = servo_driver servo_driver.o servo_driver-0x00000.bin servo_driver-0x40000.bin
 QUAD_SERVO_OUTPUT = quad_servo_driver quad_servo_driver.o quad_servo_driver-0x00000.bin quad_servo_driver-0x40000.bin
 
-all: servo stepper quad_servo
+all: servo stepper quad
 
 servo: servo_driver-0x00000.bin
 

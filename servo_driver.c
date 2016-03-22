@@ -59,7 +59,7 @@ void step_driver ( void )
 
 }
 
-void opcode_move(signed int step_num, unsigned short step_rate)
+void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
 {
 	int tick_total = high_ticks+step_num;
 	if(tick_total > SERVO_TICKS_CEILING)
@@ -86,7 +86,7 @@ void opcode_move(signed int step_num, unsigned short step_rate)
 	}
 }
 
-void opcode_goto(signed int step_num, unsigned short step_rate)
+void opcode_goto(signed int step_num, unsigned short step_rate, char motor_id)
 {
 	goal_high_ticks = ((step_num <= SERVO_TICKS_CEILING) && (step_num >= SERVO_TICKS_FLOOR))
 		? step_num : goal_high_ticks;
@@ -102,7 +102,7 @@ void opcode_goto(signed int step_num, unsigned short step_rate)
 	}
 }
 
-void opcode_stop(signed int wait_time, unsigned short precision)
+void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 {
 	motor_state = PAUSED;
 	goal_high_ticks = PAUSED_HIGH_TICKS;
@@ -145,7 +145,7 @@ void driver_logic_task(os_event_t *events)
 	}
 }
 
-int is_motor_running()
+int is_motor_running(char motor_id)
 {
 	return !command_done;
 }

@@ -51,7 +51,7 @@ void step_driver ( void )
 	}
 }
 
-void opcode_move(signed int step_num, unsigned short step_rate)
+void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
 {
 	motor_dir = (step_num >= 0) ? FORWARDS : BACKWARDS;
 	eio_low(GPIO_STEP);
@@ -62,7 +62,7 @@ void opcode_move(signed int step_num, unsigned short step_rate)
 	opcode = 'M';
 }
 
-void opcode_goto(signed int step_num, unsigned short step_rate)
+void opcode_goto(signed int step_num, unsigned short step_rate, char motor_id)
 {
 	motor_dir = (stepper_position <= step_num) ? FORWARDS : BACKWARDS;
 	motor_state = DIRECTION_ASSERT;
@@ -73,7 +73,7 @@ void opcode_goto(signed int step_num, unsigned short step_rate)
 	opcode = 'G';
 }
 
-void opcode_stop(signed int wait_time, unsigned short precision)
+void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 {
 	motor_state = STEPPING;
 	motor_dir = PAUSED;
@@ -94,7 +94,7 @@ void driver_logic_task(os_event_t *events)
 
 }
 
-int is_motor_running()
+int is_motor_running(char motor_id)
 {
 	return (motor_state == IDLE) ? 0 : 1;
 }
