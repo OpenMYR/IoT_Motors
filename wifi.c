@@ -14,8 +14,10 @@
 #include "osapi.h"
 #include "mem.h"
 
-static char *ssid = STATION_SSID;
-static char *pass = STATION_PASS;
+static char *bi_ssid = STATION_SSID;
+static char *bi_pass = STATION_PASS;
+
+static int num_retries = 0;
 
 void print_ip ( unsigned int ip )
 {
@@ -44,32 +46,85 @@ void show_ip ( void )
 
 void wifi_event ( System_Event_t *e )
 {
-    int event = e->event;
+	if(wifi_get_opmode() != SOFTAP_MODE)
+	{
+		int event = e->event;
+		if ( event == EVENT_STAMODE_GOT_IP ) {
+			os_printf ( "Event, got IP\n" );
+			show_ip ();
+			udp_setup();
+		} else if ( event == EVENT_STAMODE_CONNECTED ) {
+			os_printf ( "Event, connected\n" );
+		} else if ( event == EVENT_STAMODE_DISCONNECTED ) {
+			os_printf ( "Event, disconnected\n" );
+			if(num_retries <= 3)
+			{
+				num_retries++;
+			}
+			else
+			{
+				//wifi_station_set_reconnect_policy(0);
+				num_retries = 0;
+				change_opmode(BROADCAST, "", "");
+			}
+			os_printf("Reason: %d\n",wifi_station_get_connect_status());
+		} else {
+			os_printf ( "Unknown event %d !\n", event );
+		}
+	}
+}
 
-    if ( event == EVENT_STAMODE_GOT_IP ) {
-	os_printf ( "Event, got IP\n" );
-	show_ip ();
-        udp_setup();
-    } else if ( event == EVENT_STAMODE_CONNECTED ) {
-	os_printf ( "Event, connected\n" );
-    } else if ( event == EVENT_STAMODE_DISCONNECTED ) {
-	os_printf ( "Event, disconnected\n" );
-    } else {
-	os_printf ( "Unknown event %d !\n", event );
-    }
+void change_opmode(mode_switch newmode, char *ssid, char *pass)
+{
+	if(wifi_get_opmode() != newmode)
+	{
+		if(newmode == STATION_CONNECT)
+		{
+			struct station_config conf;
+			os_memset ( &conf, 0, sizeof(struct station_config) );
+			os_memcpy (&conf.ssid, bi_ssid, 32);
+			os_memcpy (&conf.password, bi_pass, 64 );
+			wifi_station_set_config (&conf); 
+		}
+		else if(newmode == BROADCAST)
+		{
+			struct softap_config apConfig;
+			wifi_softap_get_config(&apConfig);
+			apConfig.channel = 7;
+			apConfig.max_connection = 8;
+			apConfig.ssid_hidden = 0;
+			wifi_softap_set_config(&apConfig);
+		}
+		wifi_set_opmode(newmode);
+		system_restart();
+	}
 }
 
 void wifi_init()
 {
-    struct station_config conf;
+	/*
+	wifi_station_set_auto_connect(1);
+	wifi_station_set_reconnect_policy(1); */
+	struct softap_config apConfig;
+	struct station_config conf;
+	switch (wifi_get_opmode()) {
+		case BROADCAST:
+			wifi_softap_get_config(&apConfig);
+			apConfig.channel = 7;
+			apConfig.max_connection = 8;
+			apConfig.ssid_hidden = 0;
+			wifi_softap_set_config(&apConfig);
+			break;
+		case STATION_CONNECT:
+			os_memset ( &conf, 0, sizeof(struct station_config) );
+			os_memcpy (&conf.ssid, bi_ssid, 32);
+			os_memcpy (&conf.password, bi_pass, 64 );
+			wifi_station_set_config (&conf); 
+			break;
+		default:
+			break;
+	}
+	udp_setup();
+	wifi_set_event_handler_cb ( wifi_event );
 
-    wifi_set_opmode(STATION_MODE);
-
-    os_memset ( &conf, 0, sizeof(struct station_config) );
-    os_memcpy (&conf.ssid, ssid, 32);
-    os_memcpy (&conf.password, pass, 64 );
-    wifi_station_set_config (&conf);
-
-    /* set a callback for wifi events */
-    wifi_set_event_handler_cb ( wifi_event );
 }

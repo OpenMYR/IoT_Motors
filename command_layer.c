@@ -15,7 +15,6 @@ uint8 command_address[4];
 
 void initialize_command_layer()
 {
-	wifi_init();
 	register_motor_packet_callback(*motor_process_command);
 	register_wifi_packet_callback(*wifi_process_command);
 	
@@ -25,6 +24,7 @@ void initialize_command_layer()
 	hw_timer_init(FRC1_SOURCE, 1);
 	hw_timer_set_func(step_driver);
 	hw_timer_arm(RESOLUTION_US);
+	system_init_done_cb(wifi_init);
 }
 
 void motor_process_command(struct stepper_command_packet *packet, uint8 *ip_addr)
@@ -52,10 +52,12 @@ void wifi_process_command(struct wifi_command_packet *packet, uint8 *ip_addr)
 	if(packet->opcode == 'C')
 	{
 		os_printf("Connect to a network\n");
+		change_opmode(STATION_CONNECT, "", "");
 	}
 	else if(packet->opcode == 'D')
 	{
 		os_printf("Disconnect from this network and resume broadcasting\n");
+		change_opmode(BROADCAST, "", "");
 	}
 	else if(packet->opcode == 'N')
 	{
