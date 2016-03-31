@@ -17,7 +17,6 @@
 #define MIN_HIGH_TICKS MINIMUM_DUTY_CYCLE_US / RESOLUTION_US
 #define PULSE_LENGTH_TICKS (PULSE_LENGTH_US / RESOLUTION_US)
 #define SECOND_LENGTH_TICKS 1000000 / RESOLUTION_US
-#define SECONDS_PER_US 10
 
 static volatile int ticks = 0;
 static volatile int high_ticks = MAX_HIGH_TICKS;
