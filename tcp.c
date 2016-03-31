@@ -7,9 +7,12 @@
 #include "user_interface.h"
 
 #define TCP_PORT 80
+#define MAX_CONNECTIONS 4
 
 static struct _esp_tcp tcp_params;
 static struct espconn tcp_server;
+
+
 
 void tcp_setup( void )
 {
@@ -34,12 +37,9 @@ void tcp_setup( void )
     tcp_server.proto.tcp = (esp_tcp*)os_zalloc(sizeof(esp_tcp));
     tcp_server.proto.tcp = &tcp_params;
 
-    espconn_regist_recvcb(&tcp_server, tcp_recv_callback);
-    espconn_regist_sentcb(&tcp_server, tcp_send_callback);
+
     espconn_regist_connectcb(&tcp_server, tcp_connect_callback);
-    espconn_regist_reconcb(&tcp_server, tcp_reconnect_callback);
-    espconn_regist_write_finish(&tcp_server, tcp_write_finish_callback);
-    espconn_regist_disconcb(&tcp_server, tcp_disconnect_callback);
+
 
     espconn_accept(&tcp_server);
 }
@@ -56,7 +56,12 @@ void tcp_send_callback(void *arg)
 
 void tcp_connect_callback(void *arg)
 {
-
+	os_printf("Connection attempt!\n");
+    //espconn_regist_recvcb(&tcp_server, tcp_recv_callback);
+    //espconn_regist_sentcb(&tcp_server, tcp_send_callback);
+    //espconn_regist_reconcb(&tcp_server, tcp_reconnect_callback);
+    //espconn_regist_write_finish(&tcp_server, tcp_write_finish_callback);
+    //espconn_regist_disconcb(&tcp_server, tcp_disconnect_callback);
 }
 
 void tcp_reconnect_callback(void *arg, sint8 err)
@@ -71,5 +76,5 @@ void tcp_disconnect_callback(void *arg)
 
 void tcp_write_finish_callback(void *arg)
 {
-	
+
 }

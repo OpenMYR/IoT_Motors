@@ -8,6 +8,7 @@
 
 #include "wifi.h"
 #include "udp.h"
+#include "tcp.h"
 #include "ip_addr.h"
 #include "user_interface.h"
 #include "user_config.h"
@@ -53,6 +54,7 @@ void wifi_event ( System_Event_t *e )
 			os_printf ( "Event, got IP\n" );
 			show_ip ();
 			udp_setup();
+			tcp_setup();
 		} else if ( event == EVENT_STAMODE_CONNECTED ) {
 			os_printf ( "Event, connected\n" );
 		} else if ( event == EVENT_STAMODE_DISCONNECTED ) {
@@ -125,6 +127,7 @@ void wifi_init()
 			break;
 	}
 	udp_setup();
+	tcp_setup();
 	wifi_set_event_handler_cb ( wifi_event );
 
 }
