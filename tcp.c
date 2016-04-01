@@ -15,6 +15,8 @@ static struct espconn tcp_server;
 
 static struct espconn current_guy;
 
+int anticipating_post = 0;
+
 void tcp_setup( void )
 {
 	os_memset( &tcp_params, 0, sizeof(struct _esp_tcp ));
@@ -64,6 +66,15 @@ void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 		{
 			espconn_send(&tcp_server, config_page, CONFIG_PAGE_LEN);
 		}
+	}
+	else if(os_strstr(pdata, "POST /") != NULL)
+	{
+		anticipating_post = 1;
+	}
+	else if(anticipating_post == 1)
+	{
+		anticipating_post = 0;
+		os_printf(pdata);
 	}
 }
 
