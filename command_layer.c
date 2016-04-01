@@ -51,8 +51,9 @@ void wifi_process_command(struct wifi_command_packet *packet, uint8 *ip_addr)
 {
 	if(packet->opcode == 'C')
 	{
-		os_printf("Connect to a network\n");
-		change_opmode(STATION_CONNECT, "", "");
+		char *ssid = packet->ssid;
+		char *pass =  packet->password;
+		change_opmode(STATION_CONNECT, ssid, pass);
 	}
 	else if(packet->opcode == 'D')
 	{

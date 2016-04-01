@@ -15,9 +15,6 @@
 #include "osapi.h"
 #include "mem.h"
 
-static char *bi_ssid = STATION_SSID;
-static char *bi_pass = STATION_PASS;
-
 static int num_retries = 0;
 
 void print_ip ( unsigned int ip )
@@ -80,13 +77,15 @@ void change_opmode(mode_switch newmode, char *ssid, char *pass)
 {
 	if(wifi_get_opmode() != newmode)
 	{
+		wifi_set_opmode(newmode);
 		if(newmode == STATION_CONNECT)
 		{
 			struct station_config conf;
 			os_memset ( &conf, 0, sizeof(struct station_config) );
-			os_memcpy (&conf.ssid, bi_ssid, 32);
-			os_memcpy (&conf.password, bi_pass, 64 );
+			os_memcpy (&conf.ssid, ssid, 32);
+			os_memcpy (&conf.password, pass, 64 );
 			wifi_station_set_config (&conf); 
+			wifi_station_connect();
 		}
 		else if(newmode == BROADCAST)
 		{
@@ -97,8 +96,7 @@ void change_opmode(mode_switch newmode, char *ssid, char *pass)
 			apConfig.ssid_hidden = 0;
 			wifi_softap_set_config(&apConfig);
 		}
-		wifi_set_opmode(newmode);
-		system_restart();
+		//system_restart();
 	}
 }
 
@@ -118,10 +116,8 @@ void wifi_init()
 			wifi_softap_set_config(&apConfig);
 			break;
 		case STATION_CONNECT:
-			os_memset ( &conf, 0, sizeof(struct station_config) );
-			os_memcpy (&conf.ssid, bi_ssid, 32);
-			os_memcpy (&conf.password, bi_pass, 64 );
-			wifi_station_set_config (&conf); 
+			wifi_station_get_config(&conf);
+			//wifi_station_set_config (&conf); 
 			break;
 		default:
 			break;

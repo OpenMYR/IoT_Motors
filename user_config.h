@@ -10,7 +10,4 @@
 #define GPIO_STEP_ENABLE 5
 #define GPIO_STEP_DIR 13
 
-#define STATION_SSID "YourSSIDHere"
-#define STATION_PASS "YourPassHere"
-
 #endif
