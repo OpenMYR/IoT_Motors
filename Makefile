@@ -7,9 +7,9 @@ OBJECTS = main.o hw_timer.o gpio_driver.o command_layer.o udp.o tcp.o wifi.o op_
 STEPPER_OUTPUT = stepper_driver stepper_driver.o stepper_driver-0x00000.bin stepper_driver-0x40000.bin
 SERVO_OUTPUT = servo_driver servo_driver.o servo_driver-0x00000.bin servo_driver-0x40000.bin
 QUAD_SERVO_OUTPUT = quad_servo_driver quad_servo_driver.o quad_servo_driver-0x00000.bin quad_servo_driver-0x40000.bin
-DC_MOTOR_OUTPUT = dc_motor_driver dc_motor_driver.o dc_motor_driver-0x00000.bin dc_motor_driver-0x40000.bin
+BRUSH_MOTOR_OUTPUT = brushed_motor_driver brushed_motor_driver.o brushed_motor_driver-0x00000.bin brushed_motor_driver-0x40000.bin
 
-all: servo stepper quad dc
+all: servo stepper quad brush
 
 servo: servo_driver-0x00000.bin
 
@@ -17,7 +17,7 @@ stepper: stepper_driver-0x00000.bin
 
 quad: quad_servo_driver-0x00000.bin
 
-dc: dc_motor_driver-0x00000.bin
+brush: brushed_motor_driver-0x00000.bin
 
 quad_servo_driver-0x00000.bin: quad_servo_driver
 	esptool.py elf2image $^
@@ -28,7 +28,7 @@ servo_driver-0x00000.bin: servo_driver
 stepper_driver-0x00000.bin: stepper_driver
 	esptool.py elf2image $^
 
-dc_motor_driver-0x00000.bin: dc_motor_driver
+brushed_motor_driver-0x00000.bin: brushed_motor_driver
 	esptool.py elf2image $^
 	
 stepper_driver: $(OBJECTS) stepper_driver.o
@@ -37,7 +37,7 @@ servo_driver: $(OBJECTS) servo_driver.o
 
 quad_servo_driver: $(OBJECTS) quad_servo_driver.o
 
-dc_motor_driver: $(OBJECTS) dc_motor_driver.o
+brushed_motor_driver: $(OBJECTS) brushed_motor_driver.o
 
 main.o: main.c
 hw_timer.o: hw_timer.c hw_timer.h
@@ -46,7 +46,7 @@ command_layer.o: command_layer.c command_layer.h
 servo_driver.o: servo_driver.c motor_driver.h
 stepper_driver.o: stepper_driver.c motor_driver.h
 quad_servo_driver.o: quad_servo_driver.c motor_driver.h
-dc_motor_driver.o: dc_motor_driver.c motor_driver.h
+brushed_motor_driver.o: brushed_motor_driver.c motor_driver.h
 udp.o: udp.c udp.h
 tcp.o: tcp.c tcp.h
 wifi.o: wifi.c wifi.h
@@ -61,11 +61,11 @@ flash-stepper: clean-stepper stepper_driver-0x00000.bin
 flash-quad: clean-quad quad_servo_driver-0x00000.bin
 	esptool.py --port /dev/ttyAMA0 write_flash 0 quad_servo_driver-0x00000.bin 0x40000 quad_servo_driver-0x40000.bin
 
-flash-dc: clean-dc dc_motor_driver-0x00000.bin
-	esptool.py --port /dev/ttyAMA0 write_flash 0 dc_motor_driver-0x00000.bin 0x40000 dc_motor_driver-0x40000.bin
+flash-brush: clean-brushed brushed_motor_driver-0x00000.bin
+	esptool.py --port /dev/ttyAMA0 write_flash 0 brushed_motor_driver-0x00000.bin 0x40000 brushed_motor_driver-0x40000.bin
 
 clean:
-	rm -f $(OBJECTS) $(SERVO_OUTPUT) $(STEPPER_OUTPUT) $(QUAD_SERVO_OUTPUT) $(DC_MOTOR_OUTPUT)
+	rm -f $(OBJECTS) $(SERVO_OUTPUT) $(STEPPER_OUTPUT) $(QUAD_SERVO_OUTPUT) $(BRUSH_MOTOR_OUTPUT)
 	
 clean-stepper:
 	rm -f $(OBJECTS) $(STEPPER_OUTPUT)
@@ -76,5 +76,5 @@ clean-servo:
 clean-quad:
 	rm -f $(OBJECTS) $(QUAD_SERVO_OUTPUT)
 
-clean-dc:
-	rm -f $(OBJECTS) $(DC_MOTOR_OUTPUT)
+clean-brush:
+	rm -f $(OBJECTS) $(BRUSH_MOTOR_OUTPUT)
