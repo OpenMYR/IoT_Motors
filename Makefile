@@ -48,7 +48,7 @@ stepper_driver.o: stepper_driver.c motor_driver.h
 quad_servo_driver.o: quad_servo_driver.c motor_driver.h
 brushed_motor_driver.o: brushed_motor_driver.c motor_driver.h
 udp.o: udp.c udp.h
-tcp.o: tcp.c tcp.h
+tcp.o: tcp.c tcp.h web_data.h
 wifi.o: wifi.c wifi.h
 op_queue.o: op_queue.c op_queue.h
 

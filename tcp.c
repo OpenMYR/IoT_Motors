@@ -5,6 +5,7 @@
 #include "mem.h"
 #include "osapi.h"
 #include "user_interface.h"
+#include "web_data.h"
 
 #define TCP_PORT 80
 #define MAX_CONNECTIONS 4
@@ -54,6 +55,16 @@ void tcp_setup( void )
 void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 {
 	os_printf("Data Recieved!\n");
+	if(os_strstr(pdata, "GET /") != NULL){
+		if(os_strstr(pdata, "GET /favicon.ico") != NULL)
+		{
+			espconn_send(&tcp_server, favicon_ico, FAVICON_LEN);
+		}
+		else
+		{
+			espconn_send(&tcp_server, config_page, CONFIG_PAGE_LEN);
+		}
+	}
 }
 
 void tcp_send_callback(void *arg)
@@ -70,8 +81,6 @@ void tcp_connect_callback(void *arg)
     espconn_regist_disconcb(&current_guy, tcp_disconnect_callback);
 	//char *page = "<html>\n<header>\n<title>This is title</title>\n</header>\n<body>\n<h1>Hello World!</h1>\n<p>ESP8266 TCP\n</body>\n</html>";
 	//espconn_send(&tcp_server, page, 114);
-	char *page = "<!DOCTYPE html>\n<html>\n<head>\n<title>Motor Control</title>\n<style type=\"text/css\">\n.container {\nwidth: 500px;\nclear: both;\n}\n.container input {\nwidth: 100%;\nclear: both;\n}\n</style>\n</head>\n<body>\n<div class=\"container\">\n<form>\nNetwork Name: <input id=\"ssid\" type=\"text\" name=\"ssid\"><br>\nNetwork Password: <input id=\"pass\" type=\"password\" name=\"pass\"><br>\n<input id=\"abc\" type=\"button\" value=\"Connect\" style=\"width:100px\">\n</form>\n</div>\n</body>\n<script type=\"text/javascript\">\ndocument.getElementById(\"abc\").addEventListener(\"click\", function(){\nvar httpRequest = new XMLHttpRequest();\nhttpRequest.onreadystatechange=function(){\nif (httpRequest.readyState==4){\nif (httpRequest.status==200 || window.location.href.indexOf(\"http\")==-1){\ndocument.getElementById(\"result\").innerHTML=httpRequest.responseText;\n}\nelse{\nalert(\"An error has occured making the request\");\n}\n}\n}\nvar namevalue=encodeURIComponent(document.getElementById(\"ssid\").value);\nvar agevalue=encodeURIComponent(document.getElementById(\"pass\").value);\nvar parameters=\"code=C\" + \"&ssid=\"+namevalue+\"&pass=\"+agevalue;\nhttpRequest.open(\"POST\", \"\", true);\nhttpRequest.setRequestHeader(\"Content-type\", \"application/x-www-form-urlencoded\");\nhttpRequest.send(parameters);\n});\n</script>\n</html>";
-	espconn_send(&tcp_server, page, 1248);
 }
 
 void tcp_reconnect_callback(void *arg, sint8 err)
