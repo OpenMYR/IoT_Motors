@@ -5,7 +5,7 @@
 #include "user_config.h"
 
 #define STEP_RATE_MAX 1000
-#define PULSE_LENGTH_US 10
+#define PULSE_LENGTH_US 50
 #define PULSE_FREQUENCY (1 / (PULSE_LENGTH_US * 0.000001))
 
 #define PULSE_LENGTH_TICKS (PULSE_LENGTH_US / RESOLUTION_US)
@@ -70,6 +70,8 @@ void step_driver ( void )
 				gpio_change_needed = 1;
 				step_pool--;
 				brushed_dc_position += motor_state;
+				inaccuracy_compensation_counter -= tick_incrementor;
+				eio_high(motor_state == FORWARDS ? GPIO_STEP_DIR : GPIO_STEP);
 				if(step_pool <= 1)//0?
 				{
 					eio_low(motor_state == FORWARDS ? GPIO_STEP_DIR : GPIO_STEP);
@@ -86,7 +88,7 @@ void step_driver ( void )
 		}
 		tick_counter += tick_incrementor;
 	}
-	else if(step_pool > 0)
+	else if(!command_done && step_pool > 0)
 	{
 		step_pool--;
 		if(step_pool == 0) system_os_post(ACK_TASK_PRIO, 0, 0);
@@ -98,7 +100,7 @@ void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
 	set_duty_cycle(step_rate);
 
 	motor_state = (step_num >= 0) ? FORWARDS : BACKWARDS;
-	step_pool = step_num;
+	step_pool = motor_state * step_num;
 	opcode = 'M';
 	if(step_num == 0){
 		system_os_post(ACK_TASK_PRIO, 0, 0);
@@ -136,17 +138,21 @@ void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 
 void set_duty_cycle (unsigned short step_rate)
 {
-	if(step_rate > STEP_RATE_MAX)
+	float bob = step_rate;
+	if(bob > STEP_RATE_MAX)
 	{
-		step_rate = STEP_RATE_MAX;
+		bob = STEP_RATE_MAX;
 	}
 	else if(step_rate < 0)
 	{
-		step_rate = 0;
+		bob = 0;
 	}
-	duty_ratio = step_rate;
-	high_threshold = (int)(PULSE_LENGTH_TICKS * duty_ratio);
-	cycle_inaccuracy = (PULSE_LENGTH_TICKS * duty_ratio) - high_threshold;
+	duty_ratio = bob / 1000.0;
+	high_threshold = PULSE_LENGTH_TICKS * duty_ratio;
+	cycle_inaccuracy = ((float)PULSE_LENGTH_TICKS * duty_ratio) - (float)high_threshold;
+	os_printf("Inaccuracy: %d\n", (int)(cycle_inaccuracy*1000.0));
+	os_printf("duty ratio: %d\n", (int)(duty_ratio * 1000.0));
+	os_printf( "high thresh: %d\n",high_threshold);
 	inaccuracy_compensation_counter = 0;
 }
 
