@@ -48,11 +48,13 @@ void tcp_setup( void )
 	}
 	
     espconn_regist_sentcb(&tcp_server, tcp_send_callback);
+    espconn_regist_recvcb(&tcp_server, tcp_recv_callback);
 }
 
 void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 {
 	os_printf("Data Recieved!\n");
+	os_printf(pdata);
 }
 
 void tcp_send_callback(void *arg)
@@ -64,7 +66,6 @@ void tcp_connect_callback(void *arg)
 {
 	current_guy = *(struct espconn*)arg;
 	os_printf("Connection attempt!\n");
-    //espconn_regist_recvcb(&current_guy, tcp_recv_callback);
     //espconn_regist_reconcb(&current_guy, tcp_reconnect_callback);
     //espconn_regist_write_finish(&current_guy, tcp_write_finish_callback);
     espconn_regist_disconcb(&current_guy, tcp_disconnect_callback);
