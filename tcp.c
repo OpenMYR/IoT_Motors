@@ -12,7 +12,7 @@
 static struct _esp_tcp tcp_params;
 static struct espconn tcp_server;
 
-
+static struct espconn current_guy;
 
 void tcp_setup( void )
 {
@@ -40,41 +40,49 @@ void tcp_setup( void )
 
     espconn_regist_connectcb(&tcp_server, tcp_connect_callback);
 
-
-    espconn_accept(&tcp_server);
+	int test = espconn_accept(&tcp_server);
+    
+	if(test > 0)
+	{
+		os_printf("TCP Server setup failure! Code: %d", test);
+	}
+	
+    espconn_regist_sentcb(&tcp_server, tcp_send_callback);
 }
 
 void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 {
-
+	os_printf("Data Recieved!\n");
 }
 
 void tcp_send_callback(void *arg)
 {
-
+	os_printf("Data Sent!\n");
 }
 
 void tcp_connect_callback(void *arg)
 {
+	current_guy = *(struct espconn*)arg;
 	os_printf("Connection attempt!\n");
-    //espconn_regist_recvcb(&tcp_server, tcp_recv_callback);
-    //espconn_regist_sentcb(&tcp_server, tcp_send_callback);
-    //espconn_regist_reconcb(&tcp_server, tcp_reconnect_callback);
-    //espconn_regist_write_finish(&tcp_server, tcp_write_finish_callback);
-    //espconn_regist_disconcb(&tcp_server, tcp_disconnect_callback);
+    //espconn_regist_recvcb(&current_guy, tcp_recv_callback);
+    //espconn_regist_reconcb(&current_guy, tcp_reconnect_callback);
+    //espconn_regist_write_finish(&current_guy, tcp_write_finish_callback);
+    espconn_regist_disconcb(&current_guy, tcp_disconnect_callback);
+	char *page = "<html>\n<header>\n<title>This is title</title>\n</header>\n<body>\n<h1>Hello World!</h1>\n<p>ESP8266 TCP\n</body>\n</html>";
+	espconn_send(&tcp_server, page, 114);
 }
 
 void tcp_reconnect_callback(void *arg, sint8 err)
 {
-
+	os_printf("Reconnection attempt!\n");
 }
 
 void tcp_disconnect_callback(void *arg)
 {
-
+	os_printf("TCP Disconnect!\n");
 }
 
 void tcp_write_finish_callback(void *arg)
 {
-
+	os_printf("TCP Write Finished!\n");
 }
