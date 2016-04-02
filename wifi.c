@@ -75,7 +75,7 @@ void wifi_event ( System_Event_t *e )
 
 void change_opmode(mode_switch newmode, char *ssid, char *pass)
 {
-	if(wifi_get_opmode() != newmode)wifi_set_opmode(newmode);
+	if(wifi_get_opmode() != newmode) wifi_set_opmode(newmode);
 	if(newmode == STATION_CONNECT)
 	{
 		struct station_config conf;
