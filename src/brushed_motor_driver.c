@@ -5,7 +5,7 @@
 #include "user_config.h"
 
 #define STEP_RATE_MAX 1000
-#define PULSE_LENGTH_US 50
+#define PULSE_LENGTH_US 2000
 #define PULSE_FREQUENCY (1 / (PULSE_LENGTH_US * 0.000001))
 
 #define PULSE_LENGTH_TICKS (PULSE_LENGTH_US / RESOLUTION_US)
