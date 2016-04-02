@@ -98,7 +98,7 @@ void step_driver ( void )
 void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
 {
 	set_duty_cycle(step_rate);
-
+	
 	motor_state = (step_num >= 0) ? FORWARDS : BACKWARDS;
 	step_pool = motor_state * step_num;
 	opcode = 'M';
@@ -107,6 +107,7 @@ void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
 	} else {
 		command_done = 0;
 	}
+	eio_low(motor_state == FORWARDS ? GPIO_STEP : GPIO_STEP_DIR);
 }
 
 void opcode_goto(signed int step_num, unsigned short step_rate, char motor_id)
@@ -121,6 +122,7 @@ void opcode_goto(signed int step_num, unsigned short step_rate, char motor_id)
 	} else {
 		command_done = 0;
 	}
+	eio_low(motor_state == FORWARDS ? GPIO_STEP : GPIO_STEP_DIR);
 }
 
 void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
@@ -134,6 +136,8 @@ void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 	} else {
 		command_done = 0;
 	}
+	eio_low(GPIO_STEP);
+	eio_low(GPIO_STEP_DIR);
 }
 
 void set_duty_cycle (unsigned short step_rate)
