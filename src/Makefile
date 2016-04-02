@@ -1,5 +1,7 @@
+INCLUDE_FOLDER = ./include
+
 CC = xtensa-lx106-elf-gcc
-CFLAGS = -I. -mlongcalls
+CFLAGS = -I$(INCLUDE_FOLDER) -mlongcalls
 LDLIBS = -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy -Wl,--end-group -lgcc
 LDFLAGS = -Teagle.app.v6.ld
 
@@ -40,17 +42,17 @@ quad_servo_driver: $(OBJECTS) quad_servo_driver.o
 brushed_motor_driver: $(OBJECTS) brushed_motor_driver.o
 
 main.o: main.c
-hw_timer.o: hw_timer.c hw_timer.h
-gpio_driver.o: gpio_driver.c gpio_driver.h
-command_layer.o: command_layer.c command_layer.h
-servo_driver.o: servo_driver.c motor_driver.h
-stepper_driver.o: stepper_driver.c motor_driver.h
-quad_servo_driver.o: quad_servo_driver.c motor_driver.h
-brushed_motor_driver.o: brushed_motor_driver.c motor_driver.h
-udp.o: udp.c udp.h
-tcp.o: tcp.c tcp.h web_data.h
-wifi.o: wifi.c wifi.h
-op_queue.o: op_queue.c op_queue.h
+hw_timer.o: hw_timer.c $(INCLUDE_FOLDER)/hw_timer.h
+gpio_driver.o: gpio_driver.c $(INCLUDE_FOLDER)/gpio_driver.h
+command_layer.o: command_layer.c $(INCLUDE_FOLDER)/command_layer.h
+servo_driver.o: servo_driver.c $(INCLUDE_FOLDER)/motor_driver.h
+stepper_driver.o: stepper_driver.c $(INCLUDE_FOLDER)/motor_driver.h
+quad_servo_driver.o: quad_servo_driver.c $(INCLUDE_FOLDER)/motor_driver.h
+brushed_motor_driver.o: brushed_motor_driver.c $(INCLUDE_FOLDER)/motor_driver.h
+udp.o: udp.c $(INCLUDE_FOLDER)/udp.h
+tcp.o: tcp.c $(INCLUDE_FOLDER)/tcp.h $(INCLUDE_FOLDER)/web_data.h
+wifi.o: wifi.c $(INCLUDE_FOLDER)/wifi.h
+op_queue.o: op_queue.c $(INCLUDE_FOLDER)/op_queue.h
 
 flash-servo: clean-servo servo_driver-0x00000.bin
 	esptool.py --port /dev/ttyAMA0 write_flash 0 servo_driver-0x00000.bin 0x40000 servo_driver-0x40000.bin
