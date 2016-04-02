@@ -75,29 +75,26 @@ void wifi_event ( System_Event_t *e )
 
 void change_opmode(mode_switch newmode, char *ssid, char *pass)
 {
-	if(wifi_get_opmode() != newmode)
+	if(wifi_get_opmode() != newmode)wifi_set_opmode(newmode);
+	if(newmode == STATION_CONNECT)
 	{
-		wifi_set_opmode(newmode);
-		if(newmode == STATION_CONNECT)
-		{
-			struct station_config conf;
-			os_memset ( &conf, 0, sizeof(struct station_config) );
-			os_memcpy (&conf.ssid, ssid, 32);
-			os_memcpy (&conf.password, pass, 64 );
-			wifi_station_set_config (&conf); 
-			wifi_station_connect();
-		}
-		else if(newmode == BROADCAST)
-		{
-			struct softap_config apConfig;
-			wifi_softap_get_config(&apConfig);
-			apConfig.channel = 7;
-			apConfig.max_connection = 8;
-			apConfig.ssid_hidden = 0;
-			wifi_softap_set_config(&apConfig);
-		}
-		//system_restart();
+		struct station_config conf;
+		os_memset ( &conf, 0, sizeof(struct station_config) );
+		os_memcpy (&conf.ssid, ssid, 32);
+		os_memcpy (&conf.password, pass, 64 );
+		wifi_station_set_config (&conf); 
+		wifi_station_connect();
 	}
+	else if(newmode == BROADCAST)
+	{
+		struct softap_config apConfig;
+		wifi_softap_get_config(&apConfig);
+		apConfig.channel = 7;
+		apConfig.max_connection = 8;
+		apConfig.ssid_hidden = 0;
+		wifi_softap_set_config(&apConfig);
+	}
+		//system_restart();
 }
 
 void wifi_init()
