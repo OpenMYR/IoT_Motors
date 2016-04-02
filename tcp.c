@@ -6,6 +6,7 @@
 #include "osapi.h"
 #include "user_interface.h"
 #include "web_data.h"
+#include "wifi.h"
 
 #define TCP_PORT 80
 #define MAX_CONNECTIONS 4
@@ -14,8 +15,6 @@ static struct _esp_tcp tcp_params;
 static struct espconn tcp_server;
 
 static struct espconn current_guy;
-
-int anticipating_post = 0;
 
 void tcp_setup( void )
 {
@@ -60,21 +59,45 @@ void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 	if(os_strstr(pdata, "GET /") != NULL){
 		if(os_strstr(pdata, "GET /favicon.ico") != NULL)
 		{
-			espconn_send(&tcp_server, favicon_ico, FAVICON_LEN);
+			espconn_send(&tcp_server, favicon_ico, FAVICON_LEN + FAV_OK_LEN);
 		}
 		else
 		{
-			espconn_send(&tcp_server, config_page, CONFIG_PAGE_LEN);
+			espconn_send(&tcp_server, config_page, OKAY_LEN + CONFIG_PAGE_LEN);
 		}
+		//espconn_send(&tcp_server, okay, OK_LEN);
 	}
 	else if(os_strstr(pdata, "POST /") != NULL)
 	{
-		anticipating_post = 1;
-	}
-	else if(anticipating_post == 1)
-	{
-		anticipating_post = 0;
-		os_printf(pdata);
+		//os_printf(pdata);
+		espconn_send(&tcp_server, post_redirect, REDIR_LEN);
+		char *parser;
+		parser = os_strstr(pdata, "code=");
+		if(parser == NULL) return;
+		if(*(parser + 5) = 'C')
+		{
+			parser = os_strstr(pdata, "ssid=");
+			char new_ssid[32] = {0};
+			if(parser == NULL) return;
+			parser = parser+5;
+			int x = 0;
+			while( *(parser + x) != '&')
+			{
+				new_ssid[x] = *(parser + x);
+				x++;
+			}
+			parser = os_strstr(pdata, "pass=");
+			char new_pass[63] = {0};
+			if(parser == NULL) return;
+			parser = parser+5;
+			x = 0;
+			while((parser + x) != pdata+len)
+			{
+				new_pass[x] = *(parser + x);
+				x++;
+			}
+			change_opmode(STATION_CONNECT, new_ssid, new_pass);
+		}
 	}
 }
 

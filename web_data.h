@@ -3,8 +3,13 @@
 
 #define FAVICON_LEN 318
 #define CONFIG_PAGE_LEN 1248
+#define REDIR_LEN 23
+#define OKAY_LEN 56
+#define FAV_OK_LEN 44
 
 static unsigned char favicon_ico[] = {
+	'H', 'T', 'T', 'P', '/', '1', '.', '1', ' ', '2', '0', '0', ' ', 'O', 'K', '\n', 
+	'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'T', 'y', 'p', 'e', ':', ' ', 'i', 'm', 'a', 'g', 'e', '/', 'x', '-', 'i', 'c', 'o', 'n', '\n', '\n',
   0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x10, 0x10, 0x10, 0x00, 0x01, 0x00,
   0x04, 0x00, 0x28, 0x01, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x28, 0x00,
   0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x01, 0x00,
@@ -34,6 +39,10 @@ static unsigned char favicon_ico[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-static char *config_page = "<!DOCTYPE html>\n<html>\n<head>\n<title>Motor Control</title>\n<style type=\"text/css\">\n.container {\nwidth: 500px;\nclear: both;\n}\n.container input {\nwidth: 100%;\nclear: both;\n}\n</style>\n</head>\n<body>\n<div class=\"container\">\n<form>\nNetwork Name: <input id=\"ssid\" type=\"text\" name=\"ssid\"><br>\nNetwork Password: <input id=\"pass\" type=\"password\" name=\"pass\"><br>\n<input id=\"abc\" type=\"button\" value=\"Connect\" style=\"width:100px\">\n</form>\n</div>\n</body>\n<script type=\"text/javascript\">\ndocument.getElementById(\"abc\").addEventListener(\"click\", function(){\nvar httpRequest = new XMLHttpRequest();\nhttpRequest.onreadystatechange=function(){\nif (httpRequest.readyState==4){\nif (httpRequest.status==200 || window.location.href.indexOf(\"http\")==-1){\ndocument.getElementById(\"result\").innerHTML=httpRequest.responseText;\n}\nelse{\nalert(\"An error has occured making the request\");\n}\n}\n}\nvar namevalue=encodeURIComponent(document.getElementById(\"ssid\").value);\nvar agevalue=encodeURIComponent(document.getElementById(\"pass\").value);\nvar parameters=\"code=C\" + \"&ssid=\"+namevalue+\"&pass=\"+agevalue;\nhttpRequest.open(\"POST\", \"\", true);\nhttpRequest.setRequestHeader(\"Content-type\", \"application/x-www-form-urlencoded\");\nhttpRequest.send(parameters);\n});\n</script>\n</html>";
+static char *config_page = "HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\n\n<!DOCTYPE html>\n<html>\n<head>\n<title>Motor Control</title>\n<style type=\"text/css\">\n.container {\nwidth: 500px;\nclear: both;\n}\n.container input {\nwidth: 100%;\nclear: both;\n}\n</style>\n</head>\n<body>\n<div class=\"container\">\n<form>\nNetwork Name: <input id=\"ssid\" type=\"text\" name=\"ssid\"><br>\nNetwork Password: <input id=\"pass\" type=\"password\" name=\"pass\"><br>\n<input id=\"abc\" type=\"button\" value=\"Connect\" style=\"width:100px\">\n</form>\n</div>\n</body>\n<script type=\"text/javascript\">\ndocument.getElementById(\"abc\").addEventListener(\"click\", function(){\nvar httpRequest = new XMLHttpRequest();\nhttpRequest.onreadystatechange=function(){\nif (httpRequest.readyState==4){\nif (httpRequest.status==200 || window.location.href.indexOf(\"http\")==-1){\ndocument.getElementById(\"result\").innerHTML=httpRequest.responseText;\n}\nelse{\nalert(\"An error has occured making the request\");\n}\n}\n}\nvar namevalue=encodeURIComponent(document.getElementById(\"ssid\").value);\nvar agevalue=encodeURIComponent(document.getElementById(\"pass\").value);\nvar parameters=\"code=C\" + \"&ssid=\"+namevalue+\"&pass=\"+agevalue;\nhttpRequest.open(\"POST\", \"\", true);\nhttpRequest.setRequestHeader(\"Content-type\", \"application/x-www-form-urlencoded\");\nhttpRequest.send(parameters);\n});\n</script>\n</html>";
+
+static char *post_redirect = "HTTP/1.1 301\nLocation:/";
+
+//static char *okay = "HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\n\n";
 
 #endif
