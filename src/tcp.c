@@ -18,6 +18,8 @@ static struct espconn current_guy;
 
 void (*json_packet_callback)(char *) = NULL;
 
+static char *json_query = NULL;
+
 void tcp_setup( void )
 {
 	os_memset( &tcp_params, 0, sizeof(struct _esp_tcp ));
@@ -73,7 +75,8 @@ void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 	{
 		//os_printf(pdata);
 		espconn_send(&tcp_server, post_redirect, REDIR_LEN);
-		json_packet_callback(pdata);
+		pdata = os_strstr(pdata, "{");
+		if (pdata != NULL) json_packet_callback(pdata);
 	}
 }
 
