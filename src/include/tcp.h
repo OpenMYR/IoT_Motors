@@ -8,5 +8,6 @@ void tcp_connect_callback(void *arg);
 void tcp_reconnect_callback(void *arg, sint8 err);
 void tcp_disconnect_callback(void *arg);
 void tcp_write_finish_callback(void *arg);
+void register_tcp_json_callback(void (*json_callback)(char* json_string));
 
 #endif

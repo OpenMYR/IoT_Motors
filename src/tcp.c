@@ -16,6 +16,8 @@ static struct espconn tcp_server;
 
 static struct espconn current_guy;
 
+void (*json_packet_callback)(char *) = NULL;
+
 void tcp_setup( void )
 {
 	os_memset( &tcp_params, 0, sizeof(struct _esp_tcp ));
@@ -71,33 +73,7 @@ void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 	{
 		//os_printf(pdata);
 		espconn_send(&tcp_server, post_redirect, REDIR_LEN);
-		char *parser;
-		parser = os_strstr(pdata, "code=");
-		if(parser == NULL) return;
-		if(*(parser + 5) = 'C')
-		{
-			parser = os_strstr(pdata, "ssid=");
-			char new_ssid[32] = {0};
-			if(parser == NULL) return;
-			parser = parser+5;
-			int x = 0;
-			while( *(parser + x) != '&')
-			{
-				new_ssid[x] = *(parser + x);
-				x++;
-			}
-			parser = os_strstr(pdata, "pass=");
-			char new_pass[63] = {0};
-			if(parser == NULL) return;
-			parser = parser+5;
-			x = 0;
-			while((parser + x) != pdata+len)
-			{
-				new_pass[x] = *(parser + x);
-				x++;
-			}
-			change_opmode(STATION_CONNECT, new_ssid, new_pass);
-		}
+		json_packet_callback(pdata);
 	}
 }
 
@@ -130,4 +106,9 @@ void tcp_disconnect_callback(void *arg)
 void tcp_write_finish_callback(void *arg)
 {
 	os_printf("TCP Write Finished!\n");
+}
+
+void register_tcp_json_callback(void (*json_callback)(char* json_string))
+{
+	json_packet_callback = json_callback;
 }

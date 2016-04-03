@@ -4,6 +4,7 @@
 #include "motor_driver.h"
 #include "op_queue.h"
 #include "osapi.h"
+#include "tcp.h"
 #include "user_config.h"
 #include "user_interface.h"
 #include "wifi.h"
@@ -17,6 +18,7 @@ void initialize_command_layer()
 {
 	register_motor_packet_callback(*motor_process_command);
 	register_wifi_packet_callback(*wifi_process_command);
+	register_tcp_json_callback(*json_process_command);
 	
 	system_os_task(acknowledge_command, ACK_TASK_PRIO, task_queue, TASK_QUEUE_LENGTH);
 	system_os_task(driver_logic_task, MOTOR_DRIVER_TASK_PRIO, task_queue, TASK_QUEUE_LENGTH);
@@ -69,6 +71,11 @@ void wifi_process_command(struct wifi_command_packet *packet, uint8 *ip_addr)
 		os_printf("Opcode not found!\n");
 	}
 	
+}
+
+void json_process_command(char *json_input)
+{
+	os_printf(json_input);
 }
 
 void issue_command()
