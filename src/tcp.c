@@ -63,7 +63,11 @@ void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 	if(os_strstr(pdata, "GET /") != NULL){
 		if(os_strstr(pdata, "GET /favicon.ico") != NULL)
 		{
-			espconn_send(&tcp_server, favicon_ico, FAVICON_LEN + FAV_OK_LEN);
+			espconn_send(&tcp_server, favicon_ico, FAVICON_LEN + FAV_OKAY_LEN);
+		}
+		else if(os_strstr(pdata, "GET /css/default.css") != NULL)
+		{
+			espconn_send(&tcp_server, default_css, DEFAULT_CSS_LEN + CSS_OKAY_LEN);
 		}
 		else
 		{
