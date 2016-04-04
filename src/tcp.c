@@ -69,6 +69,14 @@ void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 		{
 			espconn_send(&tcp_server, default_css, DEFAULT_CSS_LEN + CSS_OKAY_LEN);
 		}
+		else if(os_strstr(pdata, "GET /images/example_logo.png") != NULL)
+		{
+			espconn_send(&tcp_server, example_logo_png, EXAMPLE_LOGO_LEN + PNG_OKAY_LEN);
+		}
+		else if(os_strstr(pdata, "GET /images/body_bg.jpg") != NULL)
+		{
+			espconn_send(&tcp_server, body_bg_jpg, BODY_BG_LEN + JPG_OKAY_LEN);
+		}
 		else
 		{
 			espconn_send(&tcp_server, config_page, OKAY_LEN + CONFIG_PAGE_LEN);
