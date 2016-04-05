@@ -1,5 +1,6 @@
 #include "command_layer.h"
 #include "hw_timer.h"
+#include "jsmn.h"
 #include "udp.h"
 #include "motor_driver.h"
 #include "op_queue.h"
@@ -9,16 +10,23 @@
 #include "user_interface.h"
 #include "wifi.h"
 
+#define JSON_TOKEN_AMOUNT 12
+
 os_event_t task_queue[TASK_QUEUE_LENGTH];
 
 struct stepper_command_packet command;
 uint8 command_address[4];
+
+jsmntok_t tokens[JSON_TOKEN_AMOUNT];
+jsmn_parser json_parser; 
 
 void initialize_command_layer()
 {
 	register_motor_packet_callback(*motor_process_command);
 	register_wifi_packet_callback(*wifi_process_command);
 	register_tcp_json_callback(*json_process_command);
+
+	jsmn_init(&json_parser);
 	
 	system_os_task(acknowledge_command, ACK_TASK_PRIO, task_queue, TASK_QUEUE_LENGTH);
 	system_os_task(driver_logic_task, MOTOR_DRIVER_TASK_PRIO, task_queue, TASK_QUEUE_LENGTH);
@@ -76,6 +84,27 @@ void wifi_process_command(struct wifi_command_packet *packet, uint8 *ip_addr)
 void json_process_command(char *json_input)
 {
 	os_printf(json_input);
+	int len = jsmn_parse(&json_parser, json_input, os_strlen(json_input), tokens, JSON_TOKEN_AMOUNT);
+	if(len > 0)
+	{
+		os_printf("Opcode: ");
+		os_printf(json_input[tokens[2].start]);
+		int x = 0;
+		while(x < tokens[4].size)
+		{
+			os_printf("\nData %d: ",x);
+			char json_data[63];
+			int token_len = tokens[5+x].end - tokens[5+x].start;
+			os_strncpy(json_input, json_data, token_len);
+			json_data[token_len] = "\0";
+			os_printf(json_data);
+		}
+		os_printf("\n");
+	}
+	else
+	{
+		os_printf("JSON Parsing error code %d\n", len);
+	}
 }
 
 void issue_command()

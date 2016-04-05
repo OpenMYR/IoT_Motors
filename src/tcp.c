@@ -1,3 +1,5 @@
+#define ICACHE_FLASH
+
 #include "c_types.h"
 #include "ip_addr.h"
 #include "espconn.h"
@@ -20,7 +22,7 @@ void (*json_packet_callback)(char *) = NULL;
 
 static char *json_query = NULL;
 
-void tcp_setup( void )
+void ICACHE_FLASH_ATTR tcp_setup( void )
 {
 	os_memset( &tcp_params, 0, sizeof(struct _esp_tcp ));
 	tcp_params.local_port = TCP_PORT;

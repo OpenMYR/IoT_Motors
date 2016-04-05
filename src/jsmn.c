@@ -1,8 +1,7 @@
-
 #define ICACHE_FLASH
+
 #include "jsmn.h"
 #include "c_types.h"
-
 
 /**
  * Allocates a fresh unused token from the token pull.
