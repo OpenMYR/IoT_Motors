@@ -2,6 +2,7 @@
 #include "hw_timer.h"
 #include "jsmn.h"
 #include "udp.h"
+#include "mem.h"
 #include "motor_driver.h"
 #include "op_queue.h"
 #include "osapi.h"
@@ -17,16 +18,14 @@ os_event_t task_queue[TASK_QUEUE_LENGTH];
 struct stepper_command_packet command;
 uint8 command_address[4];
 
-jsmntok_t tokens[JSON_TOKEN_AMOUNT];
-jsmn_parser json_parser; 
+//static volatile jsmntok_t tokens[JSON_TOKEN_AMOUNT];
+static volatile jsmn_parser json_parser; 
 
 void initialize_command_layer()
 {
 	register_motor_packet_callback(*motor_process_command);
 	register_wifi_packet_callback(*wifi_process_command);
 	register_tcp_json_callback(*json_process_command);
-
-	jsmn_init(&json_parser);
 	
 	system_os_task(acknowledge_command, ACK_TASK_PRIO, task_queue, TASK_QUEUE_LENGTH);
 	system_os_task(driver_logic_task, MOTOR_DRIVER_TASK_PRIO, task_queue, TASK_QUEUE_LENGTH);
@@ -84,22 +83,33 @@ void wifi_process_command(struct wifi_command_packet *packet, uint8 *ip_addr)
 void json_process_command(char *json_input)
 {
 	os_printf(json_input);
+	jsmn_init(&json_parser);
+	jsmntok_t tokens[JSON_TOKEN_AMOUNT] = {0};
 	int len = jsmn_parse(&json_parser, json_input, os_strlen(json_input), tokens, JSON_TOKEN_AMOUNT);
+	os_printf("\nJson parsed, length %d\n", len);
+	os_printf(json_input);
 	if(len > 0)
 	{
-		os_printf("Opcode: ");
-		os_printf(json_input[tokens[2].start]);
-		int x = 0;
-		while(x < tokens[4].size)
+		char json_opcode = *(json_input + 9);
+		if(json_opcode == 'C')
 		{
-			os_printf("\nData %d: ",x);
-			char json_data[63];
-			int token_len = tokens[5+x].end - tokens[5+x].start;
-			os_strncpy(json_input, json_data, token_len);
-			json_data[token_len] = "\0";
-			os_printf(json_data);
+			int token_len = tokens[5].end - tokens[5].start;
+			os_printf("\nSSID Length: %d, SSID: ",token_len);
+			char *ssid = os_zalloc(token_len+1);
+			os_strncpy(ssid, json_input + tokens[5].start, token_len);
+			os_printf(ssid);
+			token_len = tokens[6].end - tokens[6].start;
+			os_printf("\nPass Length: %d, Pass: ",token_len);
+			char *pass = os_zalloc(token_len+1);
+			os_strncpy(pass, json_input + tokens[6].start, token_len);
+			os_printf(pass);
+			os_printf("\n");
+			change_opmode(STATION_CONNECT, ssid, pass);
 		}
-		os_printf("\n");
+		else if(json_opcode == 'D')
+		{
+			change_opmode(BROADCAST, "", "");
+		}
 	}
 	else
 	{

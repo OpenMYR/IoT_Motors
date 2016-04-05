@@ -1,7 +1,9 @@
 #ifndef __JSMN_H_
 #define __JSMN_H_
+#define ICACHE_FLASH
 
 #include <stddef.h>
+#include "c_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,13 +62,13 @@ typedef struct {
 /**
  * Create JSON parser over an array of tokens
  */
-void jsmn_init(jsmn_parser *parser);
+void ICACHE_FLASH_ATTR jsmn_init(jsmn_parser *parser);
 
 /**
  * Run JSON parser. It parses a JSON data string into and array of tokens, each describing
  * a single JSON object.
  */
-int jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
+int ICACHE_FLASH_ATTR jsmn_parse(jsmn_parser *parser, const char *js, size_t len,
 		jsmntok_t *tokens, unsigned int num_tokens);
 
 #ifdef __cplusplus
