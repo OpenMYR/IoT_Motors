@@ -16,7 +16,7 @@
 static struct _esp_tcp tcp_params;
 static struct espconn tcp_server;
 
-static struct espconn current_guy;
+static struct espconn *tcp_connections[MAX_CONNECTIONS];
 
 void (*json_packet_callback)(char *) = NULL;
 
@@ -24,6 +24,12 @@ static char *json_query = NULL;
 
 void ICACHE_FLASH_ATTR tcp_setup( void )
 {
+	int p = 0;
+	for(p = 0; p < MAX_CONNECTIONS; p++)
+	{
+		tcp_connections[p] = (struct espconn*)NULL;
+	}
+
 	os_memset( &tcp_params, 0, sizeof(struct _esp_tcp ));
 	tcp_params.local_port = TCP_PORT;
 
@@ -55,6 +61,7 @@ void ICACHE_FLASH_ATTR tcp_setup( void )
 		os_printf("TCP Server setup failure! Code: %d", test);
 	}
 	
+	espconn_tcp_set_max_con(MAX_CONNECTIONS);
     espconn_regist_sentcb(&tcp_server, tcp_send_callback);
     espconn_regist_recvcb(&tcp_server, tcp_recv_callback);
 }
@@ -97,17 +104,38 @@ void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 void tcp_send_callback(void *arg)
 {
 	os_printf("Data Sent!\n");
+	struct espconn current = *(struct espconn*)arg;
+	os_printf("TCP Disconnect!\n");
+	int conn = find_connection(current.proto.tcp->remote_ip, current.proto.tcp->remote_port);
+	if(conn < 0)
+	{
+		os_printf("Connection not found!\n");
+	}
+	else
+	{
+		espconn_disconnect(tcp_connections[conn]);
+	}
 }
 
 void tcp_connect_callback(void *arg)
 {
-	current_guy = *(struct espconn*)arg;
 	os_printf("Connection attempt!\n");
-    //espconn_regist_reconcb(&current_guy, tcp_reconnect_callback);
-    //espconn_regist_write_finish(&current_guy, tcp_write_finish_callback);
-    espconn_regist_disconcb(&current_guy, tcp_disconnect_callback);
-	//char *page = "<html>\n<header>\n<title>This is title</title>\n</header>\n<body>\n<h1>Hello World!</h1>\n<p>ESP8266 TCP\n</body>\n</html>";
-	//espconn_send(&tcp_server, page, 114);
+	int x = 0;
+	while((x < MAX_CONNECTIONS) && (tcp_connections[x] != NULL)){ x++; }
+	if(x == MAX_CONNECTIONS)
+	{
+		os_printf("No connection slots!\n");
+		espconn_disconnect((struct espconn*)arg);
+	}
+	else
+	{
+		tcp_connections[x] = os_malloc(sizeof(struct espconn));
+		*(tcp_connections[x]) = *(struct espconn*)arg;
+		os_printf("Allocated %d\n", x);
+    	//espconn_regist_reconcb(&tcp_connections, tcp_reconnect_callback);
+    	//espconn_regist_write_finish(&tcp_connections, tcp_write_finish_callback);
+    	espconn_regist_disconcb(tcp_connections[x], tcp_disconnect_callback);
+	}
 }
 
 void tcp_reconnect_callback(void *arg, sint8 err)
@@ -115,9 +143,33 @@ void tcp_reconnect_callback(void *arg, sint8 err)
 	os_printf("Reconnection attempt!\n");
 }
 
+			/*
+		os_printf("Remote Port: %d, %d \n", tcp_connections[x]->proto.tcp->remote_port, current.proto.tcp->remote_port);
+		os_printf("Remote Port: %d.%d.%d.%d, %d.%d.%d.%d \n", tcp_connections[x]->proto.tcp->remote_ip[0],
+			tcp_connections[x]->proto.tcp->remote_ip[1],
+			tcp_connections[x]->proto.tcp->remote_ip[2],
+			tcp_connections[x]->proto.tcp->remote_ip[3],
+			current.proto.tcp->remote_ip[0],
+			current.proto.tcp->remote_ip[1],
+			current.proto.tcp->remote_ip[2],
+			current.proto.tcp->remote_ip[3]);
+			*/
+
 void tcp_disconnect_callback(void *arg)
 {
+	struct espconn current = *(struct espconn*)arg;
 	os_printf("TCP Disconnect!\n");
+	int conn = find_connection(current.proto.tcp->remote_ip, current.proto.tcp->remote_port);
+	if(conn < 0)
+	{
+		os_printf("Connection not found!\n");
+	}
+	else
+	{
+		os_free(tcp_connections[conn]);
+		tcp_connections[conn] = NULL;
+		os_printf("Freed %d\n", conn);
+	}
 }
 
 void tcp_write_finish_callback(void *arg)
@@ -128,4 +180,34 @@ void tcp_write_finish_callback(void *arg)
 void register_tcp_json_callback(void (*json_callback)(char* json_string))
 {
 	json_packet_callback = json_callback;
+}
+
+int find_connection(uint8* current_ip_address, int current_port)
+{
+	int x = 0;
+	int break_while = 0;
+	while((x < MAX_CONNECTIONS) && !break_while)
+	{ 
+		if(tcp_connections[x] != NULL)
+		{
+			if((os_memcmp(tcp_connections[x]->proto.tcp->remote_ip, current_ip_address, 4 ) == 0) &&
+				(tcp_connections[x]->proto.tcp->remote_port == current_port))
+			{
+				break_while = 1;
+			}
+			else
+			{
+				x++;
+			}
+		}
+		else
+		{
+			x++;
+		}			
+	}
+	if(x == MAX_CONNECTIONS)
+	{
+		return -1;
+	}
+	return x;
 }
