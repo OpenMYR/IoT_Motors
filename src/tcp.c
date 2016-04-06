@@ -11,7 +11,7 @@
 #include "wifi.h"
 
 #define TCP_PORT 80
-#define MAX_CONNECTIONS 4
+#define MAX_CONNECTIONS 5
 
 static struct _esp_tcp tcp_params;
 static struct espconn tcp_server;
@@ -66,7 +66,7 @@ void ICACHE_FLASH_ATTR tcp_setup( void )
     espconn_regist_recvcb(&tcp_server, tcp_recv_callback);
 }
 
-void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
+void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 {
 	os_printf("Data Recieved!\n");
 	if(os_strstr(pdata, "GET /") != NULL){
@@ -101,7 +101,7 @@ void tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 	}
 }
 
-void tcp_send_callback(void *arg)
+void ICACHE_FLASH_ATTR tcp_send_callback(void *arg)
 {
 	os_printf("Data Sent!\n");
 	struct espconn current = *(struct espconn*)arg;
@@ -117,7 +117,7 @@ void tcp_send_callback(void *arg)
 	}
 }
 
-void tcp_connect_callback(void *arg)
+void ICACHE_FLASH_ATTR tcp_connect_callback(void *arg)
 {
 	os_printf("Connection attempt!\n");
 	int x = 0;
@@ -138,24 +138,12 @@ void tcp_connect_callback(void *arg)
 	}
 }
 
-void tcp_reconnect_callback(void *arg, sint8 err)
+void ICACHE_FLASH_ATTR tcp_reconnect_callback(void *arg, sint8 err)
 {
 	os_printf("Reconnection attempt!\n");
 }
 
-			/*
-		os_printf("Remote Port: %d, %d \n", tcp_connections[x]->proto.tcp->remote_port, current.proto.tcp->remote_port);
-		os_printf("Remote Port: %d.%d.%d.%d, %d.%d.%d.%d \n", tcp_connections[x]->proto.tcp->remote_ip[0],
-			tcp_connections[x]->proto.tcp->remote_ip[1],
-			tcp_connections[x]->proto.tcp->remote_ip[2],
-			tcp_connections[x]->proto.tcp->remote_ip[3],
-			current.proto.tcp->remote_ip[0],
-			current.proto.tcp->remote_ip[1],
-			current.proto.tcp->remote_ip[2],
-			current.proto.tcp->remote_ip[3]);
-			*/
-
-void tcp_disconnect_callback(void *arg)
+void ICACHE_FLASH_ATTR tcp_disconnect_callback(void *arg)
 {
 	struct espconn current = *(struct espconn*)arg;
 	os_printf("TCP Disconnect!\n");
@@ -172,17 +160,17 @@ void tcp_disconnect_callback(void *arg)
 	}
 }
 
-void tcp_write_finish_callback(void *arg)
+void ICACHE_FLASH_ATTR tcp_write_finish_callback(void *arg)
 {
 	os_printf("TCP Write Finished!\n");
 }
 
-void register_tcp_json_callback(void (*json_callback)(char* json_string))
+void ICACHE_FLASH_ATTR register_tcp_json_callback(void (*json_callback)(char* json_string))
 {
 	json_packet_callback = json_callback;
 }
 
-int find_connection(uint8* current_ip_address, int current_port)
+int ICACHE_FLASH_ATTR find_connection(uint8* current_ip_address, int current_port)
 {
 	int x = 0;
 	int break_while = 0;
