@@ -82,7 +82,6 @@ void wifi_process_command(struct wifi_command_packet *packet, uint8 *ip_addr)
 
 void json_process_command(char *json_input)
 {
-	os_printf(json_input);
 	jsmn_init(&json_parser);
 	jsmntok_t tokens[JSON_TOKEN_AMOUNT] = {0};
 	int len = jsmn_parse(&json_parser, json_input, os_strlen(json_input), tokens, JSON_TOKEN_AMOUNT);
@@ -94,16 +93,11 @@ void json_process_command(char *json_input)
 		if(json_opcode == 'C')
 		{
 			int token_len = tokens[5].end - tokens[5].start;
-			os_printf("\nSSID Length: %d, SSID: ",token_len);
 			char *ssid = os_zalloc(token_len+1);
 			os_strncpy(ssid, json_input + tokens[5].start, token_len);
-			os_printf(ssid);
 			token_len = tokens[6].end - tokens[6].start;
-			os_printf("\nPass Length: %d, Pass: ",token_len);
 			char *pass = os_zalloc(token_len+1);
 			os_strncpy(pass, json_input + tokens[6].start, token_len);
-			os_printf(pass);
-			os_printf("\n");
 			change_opmode(STATION_CONNECT, ssid, pass);
 		}
 		else if(json_opcode == 'D')

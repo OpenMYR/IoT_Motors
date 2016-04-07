@@ -21,6 +21,7 @@ static struct espconn *tcp_connections[MAX_CONNECTIONS];
 void (*json_packet_callback)(char *) = NULL;
 
 static char *json_query = NULL;
+static int json_connection_num = 0;
 
 void ICACHE_FLASH_ATTR tcp_setup( void )
 {
@@ -51,7 +52,7 @@ void ICACHE_FLASH_ATTR tcp_setup( void )
     tcp_server.proto.tcp = (esp_tcp*)os_zalloc(sizeof(esp_tcp));
     tcp_server.proto.tcp = &tcp_params;
 
-
+	espconn_regist_time(&tcp_server, 5, 0);
     espconn_regist_connectcb(&tcp_server, tcp_connect_callback);
 
 	int test = espconn_accept(&tcp_server);
@@ -62,13 +63,16 @@ void ICACHE_FLASH_ATTR tcp_setup( void )
 	}
 	
 	espconn_tcp_set_max_con(MAX_CONNECTIONS);
-    espconn_regist_sentcb(&tcp_server, tcp_send_callback);
+    //espconn_regist_sentcb(&tcp_server, tcp_send_callback);
     espconn_regist_recvcb(&tcp_server, tcp_recv_callback);
 }
 
 void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short len)
 {
-	os_printf("Data Recieved!\n");
+	struct espconn current = *(struct espconn*)arg;
+	int conn = find_connection(current.proto.tcp->remote_ip, current.proto.tcp->remote_port);
+	os_memcpy(tcp_server.proto.tcp->remote_ip, current.proto.tcp->remote_ip, 4 );
+	tcp_server.proto.tcp->remote_port = current.proto.tcp->remote_port;
 	if(os_strstr(pdata, "GET /") != NULL){
 		if(os_strstr(pdata, "GET /favicon.ico") != NULL)
 		{
@@ -90,51 +94,41 @@ void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short 
 		{
 			espconn_send(&tcp_server, config_page, OKAY_LEN + CONFIG_PAGE_LEN);
 		}
-		//espconn_send(&tcp_server, okay, OK_LEN);
 	}
 	else if(os_strstr(pdata, "POST /") != NULL)
 	{
-		//os_printf(pdata);
 		espconn_send(&tcp_server, post_redirect, REDIR_LEN);
+		json_connection_num = conn;
 		pdata = os_strstr(pdata, "{");
-		if (pdata != NULL) json_packet_callback(pdata);
+		if (pdata != NULL)
+		{
+			json_query = os_zalloc(os_strlen(pdata) + 1);
+			os_strcpy(json_query, pdata);
+		}
 	}
 }
 
 void ICACHE_FLASH_ATTR tcp_send_callback(void *arg)
 {
 	os_printf("Data Sent!\n");
-	struct espconn current = *(struct espconn*)arg;
-	os_printf("TCP Disconnect!\n");
-	int conn = find_connection(current.proto.tcp->remote_ip, current.proto.tcp->remote_port);
-	if(conn < 0)
-	{
-		os_printf("Connection not found!\n");
-	}
-	else
-	{
-		espconn_disconnect(tcp_connections[conn]);
-	}
 }
 
 void ICACHE_FLASH_ATTR tcp_connect_callback(void *arg)
 {
-	os_printf("Connection attempt!\n");
 	int x = 0;
 	while((x < MAX_CONNECTIONS) && (tcp_connections[x] != NULL)){ x++; }
 	if(x == MAX_CONNECTIONS)
 	{
-		os_printf("No connection slots!\n");
+		os_printf("Connection attempt: No connection slots!\n");
 		espconn_disconnect((struct espconn*)arg);
 	}
 	else
 	{
 		tcp_connections[x] = os_malloc(sizeof(struct espconn));
 		*(tcp_connections[x]) = *(struct espconn*)arg;
-		os_printf("Allocated %d\n", x);
-    	//espconn_regist_reconcb(&tcp_connections, tcp_reconnect_callback);
-    	//espconn_regist_write_finish(&tcp_connections, tcp_write_finish_callback);
-    	espconn_regist_disconcb(tcp_connections[x], tcp_disconnect_callback);
+		//espconn_regist_reconcb(tcp_connections[x], tcp_reconnect_callback);
+		//espconn_regist_write_finish(tcp_connections[x], tcp_write_finish_callback);
+		espconn_regist_disconcb(tcp_connections[x], tcp_disconnect_callback);
 	}
 }
 
@@ -146,17 +140,21 @@ void ICACHE_FLASH_ATTR tcp_reconnect_callback(void *arg, sint8 err)
 void ICACHE_FLASH_ATTR tcp_disconnect_callback(void *arg)
 {
 	struct espconn current = *(struct espconn*)arg;
-	os_printf("TCP Disconnect!\n");
 	int conn = find_connection(current.proto.tcp->remote_ip, current.proto.tcp->remote_port);
 	if(conn < 0)
 	{
-		os_printf("Connection not found!\n");
+		os_printf("TCP Disconnect: Connection %d not found!\n", conn);
 	}
 	else
 	{
+		if((conn == json_connection_num) && (json_query != NULL))
+		{
+			json_packet_callback(json_query);
+			os_free(json_query);
+			json_query = NULL;
+		}
 		os_free(tcp_connections[conn]);
 		tcp_connections[conn] = NULL;
-		os_printf("Freed %d\n", conn);
 	}
 }
 
