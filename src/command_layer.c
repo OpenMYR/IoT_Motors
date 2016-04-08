@@ -3,6 +3,7 @@
 #include "jsmn.h"
 #include "udp.h"
 #include "mem.h"
+#include <math.h>
 #include "motor_driver.h"
 #include "op_queue.h"
 #include "osapi.h"
@@ -89,7 +90,7 @@ void json_process_command(char *json_input)
 	os_printf(json_input);
 	if(len > 0)
 	{
-		char json_opcode = *(json_input + 9);
+		char json_opcode = *(json_input + tokens[2].start);
 		if(json_opcode == 'C')
 		{
 			int token_len = tokens[5].end - tokens[5].start;
@@ -103,6 +104,32 @@ void json_process_command(char *json_input)
 		else if(json_opcode == 'D')
 		{
 			change_opmode(BROADCAST, "", "");
+		}
+		else if((json_opcode == 'M') || (json_opcode == 'S') || (json_opcode == 'G'))
+		{
+			struct stepper_command_packet parsed_motor_command;
+			parsed_motor_command.port = 0;
+			parsed_motor_command.opcode = json_opcode;
+			parsed_motor_command.queue = (*(json_input + tokens[5].start) == '1') ? 1 : 0;
+			signed int steps = 0;
+			int place_tracker = 0;
+			for(place_tracker; place_tracker < (tokens[6].end - tokens[6].start); place_tracker++)
+			{
+				steps *= 10;
+				steps += *(json_input + tokens[6].start + place_tracker) - 48;
+			}
+			parsed_motor_command.step_num = steps;
+			unsigned short rate = 0;
+			place_tracker = 0;
+			for(place_tracker; place_tracker < (tokens[7].end - tokens[7].start); place_tracker++)
+			{
+				rate *= 10;
+				rate += *(json_input + tokens[7].start + place_tracker) - 48;
+			}
+			parsed_motor_command.step_rate = rate;
+			uint8 dummy_ip[4];
+			os_printf("Parsed command: Opcode: %c,\n Queue: %d,\n Steps: %d,\n Rate: %d\n", json_opcode, parsed_motor_command.queue, steps, rate);
+			motor_process_command(&parsed_motor_command, dummy_ip);
 		}
 	}
 	else
@@ -153,6 +180,6 @@ void fetch_command()
 
 void acknowledge_command(os_event_t *events)
 {
-	udp_send_ack(command.opcode, 0, command_address, ntohs(command.port));
+	if(command.port != 0) udp_send_ack(command.opcode, 0, command_address, ntohs(command.port));
 	fetch_command();
 }
