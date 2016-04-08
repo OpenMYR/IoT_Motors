@@ -12,7 +12,8 @@
 #include "user_interface.h"
 #include "wifi.h"
 
-#define JSON_TOKEN_AMOUNT 12
+//Web server can send up to 10 commands, at 8 tokens per command plus three header tokens
+#define JSON_TOKEN_AMOUNT 83
 
 os_event_t task_queue[TASK_QUEUE_LENGTH];
 

@@ -76,23 +76,23 @@ void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short 
 	if(os_strstr(pdata, "GET /") != NULL){
 		if(os_strstr(pdata, "GET /favicon.ico") != NULL)
 		{
-			espconn_send(&tcp_server, favicon_ico, FAVICON_LEN + FAV_OKAY_LEN);
+			espconn_send(&tcp_server, favicon_ico, FAVICON_LEN + FAV_OK_LEN);
 		}
 		else if(os_strstr(pdata, "GET /css/default.css") != NULL)
 		{
-			espconn_send(&tcp_server, default_css, DEFAULT_CSS_LEN + CSS_OKAY_LEN);
+			espconn_send(&tcp_server, default_css, DEFAULT_CSS_LEN + CSS_OK_LEN);
 		}
-		else if(os_strstr(pdata, "GET /images/example_logo.png") != NULL)
+		else if(os_strstr(pdata, "GET /images/myr_logo.png") != NULL)
 		{
-			espconn_send(&tcp_server, example_logo_png, EXAMPLE_LOGO_LEN + PNG_OKAY_LEN);
+			espconn_send(&tcp_server, myr_logo_png, MYR_LOGO_LEN + PNG_OK_LEN);
 		}
 		else if(os_strstr(pdata, "GET /images/body_bg.jpg") != NULL)
 		{
-			espconn_send(&tcp_server, body_bg_jpg, BODY_BG_LEN + JPG_OKAY_LEN);
+			espconn_send(&tcp_server, body_bg_jpg, BODY_BG_LEN + JPG_OK_LEN);
 		}
 		else
 		{
-			espconn_send(&tcp_server, config_page, OKAY_LEN + CONFIG_PAGE_LEN);
+			espconn_send(&tcp_server, config_page, CONFIG_PAGE_LEN + CONFIG_OK_LEN);
 		}
 	}
 	else if(os_strstr(pdata, "POST /") != NULL)
