@@ -1,0 +1,46 @@
+#ifndef WEB_DATA_H
+#define WEB_DATA_H
+
+#define DEFAULT_CSS_LEN ##css/default.css-length##
+#define BODY_BG_LEN ##images/body_bg.jpg-length## 
+#define MYR_LOGO_LEN ##images/myr_logo.png-length##
+
+#define FAVICON_LEN ##favicon.ico-length##
+#define CONFIG_PAGE_LEN ##config.html-length##
+
+#define CONFIG_OK_LEN (96 + ##config.html-length-digits##)
+#define REDIR_LEN (23 + 19 + 21)
+#define CSS_OK_LEN (95 + ##css/default.css-length-digits##)
+#define FAV_OK_LEN (84 + ##favicon.ico-length-digits##)
+#define PNG_OK_LEN (81 + ##images/myr_logo.png-length-digits##)
+#define JPG_OK_LEN (82 + ##images/body_bg.jpg-length-digits##)
+
+static char *config_page = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: ##config.html-length##\r\nConnection: close\r\n\r\n##config.html-data##";
+static char *post_redirect = "HTTP/1.1 202 Accepted\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+static char *default_css = "HTTP/1.1 200 OK\r\nContent-Type: text/css; charset=UTF-8\r\nContent-Length: ##css/default.css-length##\r\nConnection: close\r\n\r\n##css/default.css-data##";
+
+static unsigned char favicon_ico[] = {
+	'H', 'T', 'T', 'P', '/', '1', '.', '1', ' ', '2', '0', '0', ' ', 'O', 'K', '\r', '\n', 
+	'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'T', 'y', 'p', 'e', ':', ' ', 'i', 'm', 'a', 'g', 'e', '/', 'x', '-', 'i', 'c', 'o', 'n', 
+	'\r', '\n', 'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'L', 'e', 'n', 'g', 't', 'h', ':', ' ', ##favicon.ico-length_as_array## 
+	'\r', '\n', 'C', 'o', 'n', 'n', 'e', 'c', 't', 'i', 'o', 'n', ':', ' ', 'c', 'l', 'o', 's', 'e', '\r', '\n', '\r', '\n',
+  ##favicon.ico-data##
+};
+
+unsigned char myr_logo_png[] = {
+    'H', 'T', 'T', 'P', '/', '1', '.', '1', ' ', '2', '0', '0', ' ', 'O', 'K', '\r', '\n', 
+  'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'T', 'y', 'p', 'e', ':', ' ', 'i', 'm', 'a', 'g', 'e', '/', 'p', 'n', 'g', 
+	'\r', '\n', 'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'L', 'e', 'n', 'g', 't', 'h', ':', ' ', ##images/myr_logo.png-length_as_array##  
+	'\r', '\n', 'C', 'o', 'n', 'n', 'e', 'c', 't', 'i', 'o', 'n', ':', ' ', 'c', 'l', 'o', 's', 'e', '\r', '\n', '\r', '\n',
+  ##images/myr_logo.png-data##  
+};
+
+unsigned char body_bg_jpg[] = {
+  'H', 'T', 'T', 'P', '/', '1', '.', '1', ' ', '2', '0', '0', ' ', 'O', 'K', '\r', '\n', 
+  'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'T', 'y', 'p', 'e', ':', ' ', 'i', 'm', 'a', 'g', 'e', '/', 'j', 'p', 'e', 'g', 
+	'\r', '\n', 'C', 'o', 'n', 't', 'e', 'n', 't', '-', 'L', 'e', 'n', 'g', 't', 'h', ':', ' ', ##images/body_bg.jpg-length_as_array## 
+	'\r', '\n', 'C', 'o', 'n', 'n', 'e', 'c', 't', 'i', 'o', 'n', ':', ' ', 'c', 'l', 'o', 's', 'e', '\r', '\n', '\r', '\n',
+  ##images/body_bg.jpg-data##    
+};
+
+#endif
