@@ -82,7 +82,7 @@ void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short 
 		{
 			espconn_send(&tcp_server, default_css, DEFAULT_CSS_LEN + CSS_OK_LEN);
 		}
-		else if(os_strstr(pdata, "GET /images/example_logo.png") != NULL)
+		else if(os_strstr(pdata, "GET /images/myr_logo.png") != NULL)
 		{
 			espconn_send(&tcp_server, myr_logo_png, MYR_LOGO_LEN + PNG_OK_LEN);
 		}
