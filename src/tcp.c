@@ -90,9 +90,17 @@ void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short 
 		{
 			espconn_send(&tcp_server, body_bg_jpg, BODY_BG_LEN + JPG_OK_LEN);
 		}
-		else
+		else if(os_strstr(pdata, "GET /config.html") != NULL)
 		{
 			espconn_send(&tcp_server, config_page, CONFIG_PAGE_LEN + CONFIG_OK_LEN);
+		}
+		else if(os_strstr(pdata, "GET /control.html") != NULL)
+		{
+			espconn_send(&tcp_server, control_page, CONTROL_PAGE_LEN + CONTROL_OK_LEN);
+		}
+		else
+		{
+			espconn_send(&tcp_server, index_page, INDEX_PAGE_LEN + INDEX_OK_LEN);
 		}
 	}
 	else if(os_strstr(pdata, "POST /") != NULL)
