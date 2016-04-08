@@ -88,53 +88,84 @@ void json_process_command(char *json_input)
 	int len = jsmn_parse(&json_parser, json_input, os_strlen(json_input), tokens, JSON_TOKEN_AMOUNT);
 	os_printf("\nJson parsed, length %d\n", len);
 	os_printf(json_input);
-	if(len > 0)
-	{
-		char json_opcode = *(json_input + tokens[2].start);
-		if(json_opcode == 'C')
-		{
-			int token_len = tokens[5].end - tokens[5].start;
-			char *ssid = os_zalloc(token_len+1);
-			os_strncpy(ssid, json_input + tokens[5].start, token_len);
-			token_len = tokens[6].end - tokens[6].start;
-			char *pass = os_zalloc(token_len+1);
-			os_strncpy(pass, json_input + tokens[6].start, token_len);
-			change_opmode(STATION_CONNECT, ssid, pass);
-		}
-		else if(json_opcode == 'D')
-		{
-			change_opmode(BROADCAST, "", "");
-		}
-		else if((json_opcode == 'M') || (json_opcode == 'S') || (json_opcode == 'G'))
-		{
-			struct stepper_command_packet parsed_motor_command;
-			parsed_motor_command.port = 0;
-			parsed_motor_command.opcode = json_opcode;
-			parsed_motor_command.queue = (*(json_input + tokens[5].start) == '1') ? 1 : 0;
-			signed int steps = 0;
-			int place_tracker = 0;
-			for(place_tracker; place_tracker < (tokens[6].end - tokens[6].start); place_tracker++)
-			{
-				steps *= 10;
-				steps += *(json_input + tokens[6].start + place_tracker) - 48;
-			}
-			parsed_motor_command.step_num = steps;
-			unsigned short rate = 0;
-			place_tracker = 0;
-			for(place_tracker; place_tracker < (tokens[7].end - tokens[7].start); place_tracker++)
-			{
-				rate *= 10;
-				rate += *(json_input + tokens[7].start + place_tracker) - 48;
-			}
-			parsed_motor_command.step_rate = rate;
-			uint8 dummy_ip[4];
-			os_printf("Parsed command: Opcode: %c,\n Queue: %d,\n Steps: %d,\n Rate: %d\n", json_opcode, parsed_motor_command.queue, steps, rate);
-			motor_process_command(&parsed_motor_command, dummy_ip);
-		}
-	}
-	else
+	if(len < 0)
 	{
 		os_printf("JSON Parsing error code %d\n", len);
+		return;
+	}
+	int place = 0;
+	while(place < len)
+	{
+		switch(tokens[place].type)
+		{
+			case JSMN_STRING:
+				if(os_memcmp("code", json_input + tokens[place].start, os_strlen("code")) == 0)
+				{
+					char json_opcode = *(json_input + tokens[place+1].start);
+					uint8 dummy_ip[4];
+					switch(json_opcode)
+					{
+						case 'C':
+						case 'D':
+						{
+							struct wifi_command_packet parsed_wifi_command;
+							parsed_wifi_command.opcode = json_opcode;
+							int token_len = tokens[place+4].end - tokens[place+4].start;
+							os_strncpy(parsed_wifi_command.ssid, json_input + tokens[place+4].start, token_len);
+							parsed_wifi_command.ssid[token_len] = 0;
+							token_len = tokens[place+5].end - tokens[place+5].start;
+							os_strncpy(parsed_wifi_command.password, json_input + tokens[place+5].start, token_len);
+							parsed_wifi_command.password[token_len] = 0;
+							wifi_process_command(&parsed_wifi_command, dummy_ip);
+							place += 6;
+							break;
+						}
+						case 'M':
+						case 'S':
+						case 'G':
+						{
+							struct stepper_command_packet parsed_motor_command;
+							parsed_motor_command.port = 0;
+							parsed_motor_command.opcode = json_opcode;
+							parsed_motor_command.queue = (*(json_input + tokens[place+4].start) == '1') ? 1 : 0;
+							signed int steps = 0;
+							int place_tracker = 0;
+							for(place_tracker; place_tracker < (tokens[place+5].end - tokens[place+5].start); place_tracker++)
+							{
+								steps *= 10;
+								steps += *(json_input + tokens[place+5].start + place_tracker) - 48;
+							}
+							parsed_motor_command.step_num = steps;
+							unsigned short rate = 0;
+							place_tracker = 0;
+							for(place_tracker; place_tracker < (tokens[place+6].end - tokens[place+6].start); place_tracker++)
+							{
+								rate *= 10;
+								rate += *(json_input + tokens[place+6].start + place_tracker) - 48;
+							}
+							parsed_motor_command.step_rate = rate;
+							os_printf("Parsed command: Opcode: %c,\n Queue: %d,\n Steps: %d,\n Rate: %d\n", json_opcode, parsed_motor_command.queue, steps, rate);
+							motor_process_command(&parsed_motor_command, dummy_ip);
+							place +=7;
+							break;
+						}
+						default:
+							os_printf("Opcode %c not found!\n", json_opcode);
+							return;
+							break;
+					}
+					break;
+				}
+			case JSMN_OBJECT:
+			case JSMN_ARRAY:
+				place++;
+				break;
+			case JSMN_PRIMITIVE:
+			case JSMN_UNDEFINED:
+				os_printf("Malformed JSON query!\n");
+				return;
+				break;
+		}
 	}
 }
 
