@@ -50,8 +50,8 @@
 							<label>Steps</label>
 						</div>
 						<div class="even">
-							<input id="angleInput" value="0" type="input" style="width:100px;">
-							<input id="stepInput" value="0" type="input" style="width:100px;">
+							<input id="angleInput" value="0" type="input" onchange="crossCalculate(1)" style="width:100px;">
+							<input id="stepInput" value="0" type="input"  onchange="crossCalculate(0)" style="width:100px;">
 						</div>
 					</div>
 
@@ -60,8 +60,8 @@
 							<label>Speed in units per second</label>
 						</div>
 						<div class="even">
-							<input id="speedAngleInput" value="0" type="input" style="width:100px;">
-							<input id="speedStepsInput" value="0" type="input" style="width:100px;">
+							<input id="speedAngleInput" value="0" type="input" onchange="crossCalculate(3)" style="width:100px;">
+							<input id="speedStepsInput" value="0" type="input" onchange="crossCalculate(2)" style="width:100px;">
 						</div>
 					</div>
 
@@ -108,6 +108,7 @@ var buttonCommandDisplays = ["Move a relative distance.", "Goto an absolute posi
 //variables
 var selectedButton = -1;
 var lastAngleValue = "0";
+var stepsToDegrees = stepsPerRotation / 360;
 
 
 var httpRequest = new XMLHttpRequest();
@@ -133,8 +134,8 @@ for (var i = 0; i < floatInputs.length; i++) {
 
 document.getElementById("add").addEventListener("click", function(){
 	if (selectedButton != -1){
-		var stepInputValue = parseFloat(floatInputs[1].value);
-		var stepRateInputValue = parseFloat(floatInputs[3].value);
+		var stepInputValue = parseInt(floatInputs[1].value);
+		var stepRateInputValue = Math.round(parseFloat(floatInputs[3].value * 1000));
 		constructRow({cells : [buttonCommands[selectedButton], stepInputValue, stepRateInputValue]});
 
 		var newCommand = {
@@ -147,7 +148,7 @@ document.getElementById("add").addEventListener("click", function(){
 		}
 		commandList.commands.push(newCommand);
 	} else {
-		//please select a command
+		alert("Please select a command!");
 	}
 });
 
@@ -171,9 +172,15 @@ function modeSelected(buttonNum){
 	command.innerHTML = buttonCommandDisplays[buttonNum];
 }
 function changedFloatInput(){
+	//enter
+	if (event.charCode == 13){
+		return true;
+	}
+	// "." if one is not already there
 	if (event.charCode == 46 && (event.target.value.indexOf('.') == -1)){
 		return true;
 	}
+	//numbers
 	if (!(event.charCode >= 48 && event.charCode <= 57)){
        if (event.preventDefault) {
            event.preventDefault();
@@ -195,6 +202,13 @@ function send (args){
 	httpRequest.open("POST", "/", true);
 	httpRequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	httpRequest.send(JSON.stringify(args));
+}
+function crossCalculate(conversion) {
+	if (conversion % 2 == 1) {
+		floatInputs[conversion].value = parseFloat(event.target.value) * stepsToDegrees;
+	} else if (conversion % 2 == 0) {
+		floatInputs[conversion].value = parseFloat(event.target.value) / stepsToDegrees;
+	}
 }
 </script>
 </html>
