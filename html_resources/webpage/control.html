@@ -51,7 +51,7 @@
 						</div>
 						<div class="even">
 							<input id="angleInput" value="0" type="input" style="width:100px;">
-							<input id="stepInput" value="stepInput" type="input" style="width:100px;">
+							<input id="stepInput" value="0" type="input" style="width:100px;">
 						</div>
 					</div>
 
@@ -75,7 +75,7 @@
 					</div>
 						<div class="even spaced">
 							<input id="add" type="button" value="Add to Queue" style="width:100px;">
-							<input id="execute" type="button" value="Execute Now" style="width:100px;">
+							<input id="execute" type="button" value="Send Queue" style="width:100px;">
 						</div>
 				</div>
 			</div>
@@ -102,11 +102,28 @@ var floatInputs = [
 	document.getElementById("speedStepsInput")	
 ];
 //predefines
+var buttonOpCode = ["M", "G", "S"];
 var buttonCommands = ["Move", "Goto", "Stop"];
 var buttonCommandDisplays = ["Move a relative distance.", "Goto an absolute position.", "Stop and dwell for some time."];
 //variables
 var selectedButton = -1;
 var lastAngleValue = "0";
+
+
+var httpRequest = new XMLHttpRequest();
+httpRequest.onreadystatechange=function(){
+	if (httpRequest.readyState==4){
+		if (httpRequest.status==202){
+		}
+		else{
+			alert("An error has occured making the request");
+		}
+	}
+}
+
+var commandList = {
+	commands : []
+};
 
 //register events
 for (var i = 0; i < floatInputs.length; i++) {
@@ -116,11 +133,29 @@ for (var i = 0; i < floatInputs.length; i++) {
 
 document.getElementById("add").addEventListener("click", function(){
 	if (selectedButton != -1){
-		constructRow({cells : [buttonCommands[selectedButton], "b", "x"]});
+		var stepInputValue = parseFloat(floatInputs[1].value);
+		var stepRateInputValue = parseFloat(floatInputs[3].value);
+		constructRow({cells : [buttonCommands[selectedButton], stepInputValue, stepRateInputValue]});
+
+		var newCommand = {
+			code : buttonOpCode[selectedButton],
+			data : [
+				1,
+				stepInputValue,
+				stepRateInputValue
+			]
+		}
+		commandList.commands.push(newCommand);
 	} else {
 		//please select a command
 	}
 });
+
+
+document.getElementById("execute").addEventListener("click", function(){
+	send(commandList);
+});
+
 function constructRow(args) {
 	var row = table.insertRow(table.rows.length);
 	row.insertCell().innerHTML = "<b>" + args.cells[0] + "</b>";
@@ -155,6 +190,11 @@ function bluredFloatInput(){
 	} else {
 		event.target.value = lastAngleValue;
 	}
+}
+function send (args){
+	httpRequest.open("POST", "/", true);
+	httpRequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	httpRequest.send(JSON.stringify(args));
 }
 </script>
 </html>
