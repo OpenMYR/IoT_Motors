@@ -20,6 +20,8 @@
 		<div id="content">
 			<h2 class="clear">Queue Instructions</h2>
 
+			<button id="clear" class="styleButton" onclick="clearQueue()" style="float: right; margin-top: 50px">Clear</button>
+
 			<div class="content" style="width: 100%; clear: both;">
 				<div class="container" style="width: 500px; float:right;">
 					<table id="queue_table" class="table-normal">
@@ -102,6 +104,7 @@ var floatInputs = [
 	document.getElementById("speedStepsInput")	
 ];
 //predefines
+var maxSentCommands = 10;
 var buttonOpCode = ["M", "G", "S"];
 var buttonCommands = ["Move", "Goto", "Stop"];
 var buttonCommandDisplays = ["Move a relative distance.", "Goto an absolute position.", "Stop and dwell for some time."];
@@ -109,14 +112,20 @@ var buttonCommandDisplays = ["Move a relative distance.", "Goto an absolute posi
 var selectedButton = -1;
 var lastAngleValue = "0";
 var stepsToDegrees = stepsPerRotation / 360;
+var moreDataWaiting = false;
+var dataParts = [];
 
 
 var httpRequest = new XMLHttpRequest();
 httpRequest.onreadystatechange=function(){
 	if (httpRequest.readyState==4){
 		if (httpRequest.status==202){
+			if (dataParts.length > 0){
+				send(dataParts.shift());
+			}
 		}
 		else{
+			dataParts = [];
 			alert("An error has occured making the request");
 		}
 	}
@@ -133,9 +142,9 @@ for (var i = 0; i < floatInputs.length; i++) {
 }
 
 document.getElementById("add").addEventListener("click", function(){
-	if (selectedButton != -1){
+	if (isValidCommand()){
 		var stepInputValue = parseInt(floatInputs[1].value);
-		var stepRateInputValue = Math.round(parseFloat(floatInputs[3].value * 1000));
+		var stepRateInputValue = Math.round(parseFloat(floatInputs[3].value));
 		constructRow({cells : [buttonCommands[selectedButton], stepInputValue, stepRateInputValue]});
 
 		var newCommand = {
@@ -147,8 +156,6 @@ document.getElementById("add").addEventListener("click", function(){
 			]
 		}
 		commandList.commands.push(newCommand);
-	} else {
-		alert("Please select a command!");
 	}
 });
 
@@ -172,8 +179,8 @@ function modeSelected(buttonNum){
 	command.innerHTML = buttonCommandDisplays[buttonNum];
 }
 function changedFloatInput(){
-	//enter
-	if (event.charCode == 13){
+	//enter or -
+	if ((event.charCode == 13) || (event.charCode == 45)){
 		return true;
 	}
 	// "." if one is not already there
@@ -198,7 +205,17 @@ function bluredFloatInput(){
 		event.target.value = lastAngleValue;
 	}
 }
-function send (args){
+function send(args){
+	if (args.commands.length > maxSentCommands) {
+		dataParts = [];
+		for (var i = 0; i < args.commands.length; i += maxSentCommands){
+			var newCommandList = {
+				commands : args.commands.slice(i, Math.min(i + maxSentCommands, args.commands.length))
+			};
+			dataParts.push(newCommandList);
+		}
+		args = dataParts.shift();
+	}
 	httpRequest.open("POST", "/", true);
 	httpRequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	httpRequest.send(JSON.stringify(args));
@@ -209,6 +226,29 @@ function crossCalculate(conversion) {
 	} else if (conversion % 2 == 0) {
 		floatInputs[conversion].value = parseFloat(event.target.value) / stepsToDegrees;
 	}
+}
+function isValidCommand(){
+	isValid = true;
+	errMessage = ""; 
+	if (selectedButton == -1) {
+		errMessage += "Please select a command.\n";
+		isValid = false;
+	}
+	if (Math.round(parseFloat(floatInputs[3].value)) < 0) {
+		errMessage += "Step rate must be positive.\n";
+		isValid = false;
+	}
+	if (!isValid){
+		alert(errMessage);
+	}
+	return isValid;
+}
+function clearQueue(){
+	while (table.rows.length > 0)
+	{
+		table.deleteRow(0);
+	}
+	commandList.commands = [];
 }
 </script>
 </html>

@@ -24,7 +24,7 @@
 static char *default_css = "HTTP/1.1 200 OK\r\nContent-Type: text/css; charset=UTF-8\r\nContent-Length: ##css/default.css-length##\r\nConnection: close\r\n\r\n##css/default.css-data##";
 static char *index_page = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: ##index.html-length##\r\nConnection: close\r\n\r\n##index.html-data##";
 static char *config_page = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: ##config.html-length##\r\nConnection: close\r\n\r\n##config.html-data##";
-static char *control_config_page = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: ##control.html-length##\r\nConnection: close\r\n\r\n##control.html-data##";
+static char *control_page = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\nContent-Length: ##control.html-length##\r\nConnection: close\r\n\r\n##control.html-data##";
 
 static char *post_redirect = "HTTP/1.1 202 Accepted\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
 
