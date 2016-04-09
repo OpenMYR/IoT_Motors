@@ -1,3 +1,4 @@
+#include "c_types.h"
 #include "command_layer.h"
 #include "hw_timer.h"
 #include "jsmn.h"
@@ -39,7 +40,6 @@ void initialize_command_layer()
 
 void motor_process_command(struct stepper_command_packet *packet, uint8 *ip_addr)
 {
-	
 	if (packet->queue && ( !is_queue_empty() ||  is_motor_running(0) ) )
 	{
 		store_command(packet, ip_addr);
@@ -127,15 +127,22 @@ void json_process_command(char *json_input)
 							struct stepper_command_packet parsed_motor_command;
 							parsed_motor_command.port = 0;
 							parsed_motor_command.opcode = json_opcode;
-							parsed_motor_command.queue = (*(json_input + tokens[place+4].start) == '1') ? 1 : 0;
+							parsed_motor_command.queue = (*(json_input + tokens[place+4].start) == '1') ? 0x01 : 0x00;
 							signed int steps = 0;
 							int place_tracker = 0;
+							int negative = 0;
+							if(*(json_input + tokens[place+5].start) == '-')
+							{
+								negative = 1;
+								place_tracker++;
+							}
 							for(place_tracker; place_tracker < (tokens[place+5].end - tokens[place+5].start); place_tracker++)
 							{
 								steps *= 10;
 								steps += *(json_input + tokens[place+5].start + place_tracker) - 48;
 							}
-							parsed_motor_command.step_num = steps;
+							steps = (negative == 1) ? ((-1) * steps) : steps;
+							parsed_motor_command.step_num = ntohl(steps);
 							unsigned short rate = 0;
 							place_tracker = 0;
 							for(place_tracker; place_tracker < (tokens[place+6].end - tokens[place+6].start); place_tracker++)
@@ -143,8 +150,7 @@ void json_process_command(char *json_input)
 								rate *= 10;
 								rate += *(json_input + tokens[place+6].start + place_tracker) - 48;
 							}
-							parsed_motor_command.step_rate = rate;
-							os_printf("Parsed command: Opcode: %c,\n Queue: %d,\n Steps: %d,\n Rate: %d\n", json_opcode, parsed_motor_command.queue, steps, rate);
+							parsed_motor_command.step_rate = ntohs(rate);
 							motor_process_command(&parsed_motor_command, dummy_ip);
 							place +=7;
 							break;
