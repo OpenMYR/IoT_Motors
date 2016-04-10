@@ -5,7 +5,7 @@ CFLAGS = -I$(INCLUDE_FOLDER) -mlongcalls
 LDLIBS = -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy -Wl,--end-group -lgcc
 LDFLAGS = -Teagle.app.v6.ld
 
-OBJECTS = main.o hw_timer.o gpio_driver.o command_layer.o udp.o tcp.o wifi.o op_queue.o
+OBJECTS = main.o hw_timer.o gpio_driver.o command_layer.o udp.o tcp.o wifi.o op_queue.o jsmn.o
 STEPPER_OUTPUT = stepper_driver stepper_driver.o stepper_driver-0x00000.bin stepper_driver-0x40000.bin
 SERVO_OUTPUT = servo_driver servo_driver.o servo_driver-0x00000.bin servo_driver-0x40000.bin
 QUAD_SERVO_OUTPUT = quad_servo_driver quad_servo_driver.o quad_servo_driver-0x00000.bin quad_servo_driver-0x40000.bin
@@ -53,6 +53,7 @@ udp.o: udp.c $(INCLUDE_FOLDER)/udp.h
 tcp.o: tcp.c $(INCLUDE_FOLDER)/tcp.h $(INCLUDE_FOLDER)/web_data.h
 wifi.o: wifi.c $(INCLUDE_FOLDER)/wifi.h
 op_queue.o: op_queue.c $(INCLUDE_FOLDER)/op_queue.h
+jsmn.o: jsmn.c
 
 flash-servo: clean-servo servo_driver-0x00000.bin
 	esptool.py --port /dev/ttyAMA0 write_flash 0 servo_driver-0x00000.bin 0x40000 servo_driver-0x40000.bin

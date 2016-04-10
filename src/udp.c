@@ -1,3 +1,5 @@
+#define ICACHE_FLASH
+
 #include "udp.h"
 #include "motor_driver.h"
 #include "c_types.h"
@@ -54,7 +56,7 @@ void udp_send_callback(void *arg)
     //os_printf("callback sent\n");
 }
 
-void udp_setup(void)
+void ICACHE_FLASH_ATTR udp_setup(void)
 {
     //Set memory and copy port info
     os_memset( &udp_params, 0, sizeof(struct _esp_udp ));

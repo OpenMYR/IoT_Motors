@@ -87,6 +87,7 @@ void change_opmode(mode_switch newmode, char *ssid, char *pass)
 	}
 	else if(newmode == BROADCAST)
 	{
+		wifi_station_disconnect();
 		struct softap_config apConfig;
 		wifi_softap_get_config(&apConfig);
 		apConfig.channel = 7;

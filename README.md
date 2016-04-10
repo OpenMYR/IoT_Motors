@@ -15,6 +15,8 @@ Tom's original wifi code: http://cholla.mmto.org/esp8266/sdk/wifi.c
 
 The hardware timer driver (hw_timer.c) is primarily code by Espressif Systems, located in the driver_lib folder of the examples in the ESP8266 IoT SDK. Used without permission.
 
+The JSON interpreter is JSMN, by Serge. Used under MIT License. https://github.com/zserge/jsmn
+
 Currently the implemented drivers support:
 -180 degree servo motors (tested on breadboard, no board prototype yet)
 -Stepper motors (some testing with board prototype)
