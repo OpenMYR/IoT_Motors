@@ -58,30 +58,30 @@ void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
 	step_pool = motor_dir * step_num;
 	rate_counter = 0.0;
 	rate_incrementor = calculate_step_incrementor(step_rate);
-	motor_state = DIRECTION_ASSERT;
 	opcode = 'M';
+	motor_state = DIRECTION_ASSERT;
 }
 
 void opcode_goto(signed int step_num, unsigned short step_rate, char motor_id)
 {
 	motor_dir = (stepper_position <= step_num) ? FORWARDS : BACKWARDS;
-	motor_state = DIRECTION_ASSERT;
 	eio_low(GPIO_STEP);
 	step_pool = motor_dir * (step_num - stepper_position);
 	rate_counter = 0.0;
 	rate_incrementor = calculate_step_incrementor(step_rate);
 	opcode = 'G';
+	motor_state = DIRECTION_ASSERT;
 }
 
 void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 {
-	motor_state = STEPPING;
 	motor_dir = PAUSED;
 	eio_low(GPIO_STEP_DIR);
 	rate_counter = 0.0;
 	rate_incrementor = 1;
 	step_pool = wait_time * precision;
 	opcode = 'S';
+	motor_state = STEPPING;
 }
 
 float calculate_step_incrementor(unsigned short input_step_rate)

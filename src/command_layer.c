@@ -179,19 +179,19 @@ void issue_command()
 	if(command.opcode == 'S')
     {
         //os_printf("Stop Command, %d Delay Counts at %u counts per second\n",
-            //ntohl(command->step_num), ntohs(command->step_rate));
+            //ntohl(command.step_num), ntohs(command.step_rate));
 	    opcode_stop(ntohl(command.step_num), ntohs(command.step_rate), 0);
     }
     else if(command.opcode == 'M')
     {
         //os_printf("Move Command, %d Relative Steps at %u steps per second\n",
-            //ntohl(command->step_num), ntohs(command->step_rate));
+            //ntohl(command.step_num), ntohs(command.step_rate));
 	    opcode_move(ntohl(command.step_num), ntohs(command.step_rate), 0);
     }
     else if(command.opcode == 'G')
     {
         //os_printf("Goto Command, %d Absolute Steps at %u steps per second\n",
-            //ntohl(command->step_num), ntohs(command->step_rate));
+            //ntohl(command.step_num), ntohs(command.step_rate));
 	    opcode_goto(ntohl(command.step_num), ntohs(command.step_rate), 0);
     }
     else
