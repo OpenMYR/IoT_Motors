@@ -20,9 +20,6 @@ static struct espconn *tcp_connections[MAX_CONNECTIONS];
 
 void (*json_packet_callback)(char *) = NULL;
 
-static char *json_query = NULL;
-static int json_connection_num = 0;
-
 void ICACHE_FLASH_ATTR tcp_setup( void )
 {
 	int p = 0;
@@ -105,14 +102,12 @@ void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short 
 	}
 	else if(os_strstr(pdata, "POST /") != NULL)
 	{
-		espconn_send(&tcp_server, post_redirect, REDIR_LEN);
-		json_connection_num = conn;
 		pdata = os_strstr(pdata, "{");
 		if (pdata != NULL)
 		{
-			json_query = os_zalloc(os_strlen(pdata) + 1);
-			os_strcpy(json_query, pdata);
+			json_packet_callback(pdata);
 		}
+		espconn_send(&tcp_server, post_redirect, REDIR_LEN);
 	}
 }
 
@@ -155,12 +150,6 @@ void ICACHE_FLASH_ATTR tcp_disconnect_callback(void *arg)
 	}
 	else
 	{
-		if((conn == json_connection_num) && (json_query != NULL))
-		{
-			json_packet_callback(json_query);
-			os_free(json_query);
-			json_query = NULL;
-		}
 		os_free(tcp_connections[conn]);
 		tcp_connections[conn] = NULL;
 	}
