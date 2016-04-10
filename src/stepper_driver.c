@@ -2,6 +2,7 @@
 #include "gpio_driver.h"
 #include "user_config.h"
 #include "osapi.h"
+#include <stdlib.h>
 
 #define PULSE_FREQUENCY (1 / (RESOLUTION_US * 0.000001))
 
@@ -79,7 +80,7 @@ void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 	eio_low(GPIO_STEP_DIR);
 	rate_counter = 0.0;
 	rate_incrementor = 1;
-	step_pool = wait_time * precision;
+	step_pool = abs(wait_time * precision);
 	opcode = 'S';
 	motor_state = STEPPING;
 }
