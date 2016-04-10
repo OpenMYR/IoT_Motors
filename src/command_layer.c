@@ -86,8 +86,6 @@ void json_process_command(char *json_input)
 	jsmn_init(&json_parser);
 	jsmntok_t tokens[JSON_TOKEN_AMOUNT] = {0};
 	int len = jsmn_parse(&json_parser, json_input, os_strlen(json_input), tokens, JSON_TOKEN_AMOUNT);
-	os_printf("\nJson parsed, length %d\n", len);
-	os_printf(json_input);
 	if(len < 0)
 	{
 		os_printf("JSON Parsing error code %d\n", len);
