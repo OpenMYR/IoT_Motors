@@ -14,7 +14,6 @@ static volatile enum motor_direction motor_dir = FORWARDS;
 
 static volatile char opcode = ' ';
 
-static volatile int step_rate = 100;
 static volatile float rate_counter = 0.0; 
 static volatile float rate_incrementor = 0.2;
 static const float step_threshold = 1;
@@ -88,7 +87,7 @@ void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 	eio_low(GPIO_STEP_DIR);
 	rate_counter = 0.0;
 	rate_incrementor = 1;
-	step_pool = abs(wait_time) * precision;
+	step_pool = abs(wait_time) / calculate_step_incrementor(precision);
 	opcode = 'S';
 	motor_state = STEPPING;
 }
