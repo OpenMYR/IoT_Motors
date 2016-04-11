@@ -154,7 +154,7 @@ document.getElementById("add").addEventListener("click", function(){
 		var stepInputValue = parseInt(floatInputs[1].value);
 		var stepRateInputValue = Math.round(parseFloat(floatInputs[3].value));
 		if(selectedButton == 2){
-			stepInputValue = 1000 * parseFloat(duration.value);
+			stepInputValue = Math.round( 1000 * parseFloat(duration.value) );
 			stepRateInputValue = 200;
 		}
 		constructRow({cells : [buttonCommands[selectedButton], stepInputValue, stepRateInputValue]});
@@ -282,6 +282,10 @@ function isValidCommand(){
 	}
 	if (Math.round(parseFloat(floatInputs[3].value)) < 0) {
 		errMessage += "Step rate must be positive.\n";
+		isValid = false;
+	}
+	if ((Math.round(parseFloat(duration.value)) < 0) && (selectedButton == 2)) {
+		errMessage += "Stop time must be positive.\n";
 		isValid = false;
 	}
 	if (!isValid){
