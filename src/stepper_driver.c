@@ -21,34 +21,51 @@ static const float step_threshold = 1;
 
 void step_driver ( void )
 {
-	if(motor_state == IDLE) return;
-	if(motor_state == DIRECTION_ASSERT)
+	if((motor_dir == PAUSED) && (motor_state == STEPPING))
 	{
-		//assert the direction for one cycle
-		motor_dir == FORWARDS ? eio_high(GPIO_STEP_DIR) : eio_low(GPIO_STEP_DIR);
-		motor_state = STEPPING;
-	}
-	else if(step_pool <= 0)
-	{
-		motor_state = IDLE;
-		eio_low(GPIO_STEP);
-		system_os_post(ACK_TASK_PRIO, 0, 0);
-	}
-	else
-	{		
-		rate_counter += rate_incrementor;
-		//stepping logic
-		if(eio_read(GPIO_STEP))
+		if(step_pool <= 0)
 		{
+			motor_state = IDLE;
 			eio_low(GPIO_STEP);
+			system_os_post(ACK_TASK_PRIO, 0, 0);
 		}
-		else if(rate_counter >= step_threshold)
+		else
 		{
-			rate_counter -= step_threshold;
-			if(motor_dir != PAUSED) eio_high(GPIO_STEP) ;
 			step_pool--;
-			stepper_position += motor_dir;
 		}
+		return;
+	}
+	switch(motor_state)
+	{
+		case DIRECTION_ASSERT:
+			motor_dir == FORWARDS ? eio_high(GPIO_STEP_DIR) : eio_low(GPIO_STEP_DIR);
+			motor_state = STEPPING;
+		case IDLE:
+			return;
+		default:
+			if(step_pool <= 0)
+			{
+				motor_state = IDLE;
+				eio_low(GPIO_STEP);
+				system_os_post(ACK_TASK_PRIO, 0, 0);
+			}
+			else
+			{
+				rate_counter += rate_incrementor;
+				//stepping logic
+				if(eio_read(GPIO_STEP))
+				{
+					eio_low(GPIO_STEP);
+				}
+				else if(rate_counter >= step_threshold)
+				{
+					rate_counter -= step_threshold;
+					eio_high(GPIO_STEP);
+					step_pool--;
+					stepper_position += motor_dir;
+				}
+			}
+			return;
 	}
 }
 
@@ -80,7 +97,7 @@ void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 	eio_low(GPIO_STEP_DIR);
 	rate_counter = 0.0;
 	rate_incrementor = 1;
-	step_pool = abs(wait_time * precision);
+	step_pool = abs(wait_time) * precision;
 	opcode = 'S';
 	motor_state = STEPPING;
 }
