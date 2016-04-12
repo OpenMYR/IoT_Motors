@@ -18,6 +18,9 @@ static struct espconn tcp_server;
 
 static struct espconn *tcp_connections[MAX_CONNECTIONS];
 
+volatile static char *json_wifi_query = NULL;
+volatile static int json_wifi_conn = 0;
+
 void (*json_packet_callback)(char *) = NULL;
 
 void ICACHE_FLASH_ATTR tcp_setup( void )
@@ -102,12 +105,25 @@ void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short 
 	}
 	else if(os_strstr(pdata, "POST /") != NULL)
 	{
-		pdata = os_strstr(pdata, "{");
-		if (pdata != NULL)
+		if(os_strstr(pdata, "control.html") != NULL)
 		{
-			json_packet_callback(pdata);
+			pdata = os_strstr(pdata, "{");
+			if (pdata != NULL)
+			{
+				json_packet_callback(pdata);
+			}
+			espconn_send(&tcp_server, post_redirect, REDIR_LEN);
 		}
-		espconn_send(&tcp_server, post_redirect, REDIR_LEN);
+		else if(os_strstr(pdata, "config.html") != NULL)
+		{
+			espconn_send(&tcp_server, post_redirect, REDIR_LEN);
+			pdata = os_strstr(pdata, "{");
+			if (pdata != NULL)
+			{
+				json_wifi_query = os_zalloc(os_strlen(pdata) + 1);
+				os_strcpy(json_wifi_query, pdata);
+			}
+		}
 	}
 }
 
@@ -150,6 +166,12 @@ void ICACHE_FLASH_ATTR tcp_disconnect_callback(void *arg)
 	}
 	else
 	{
+		if((json_wifi_conn == conn) && (json_wifi_query != NULL))
+		{
+			json_packet_callback(json_wifi_query);
+			os_free(json_wifi_query);
+			json_wifi_query = NULL;
+		}
 		os_free(tcp_connections[conn]);
 		tcp_connections[conn] = NULL;
 	}
