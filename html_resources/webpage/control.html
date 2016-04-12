@@ -21,6 +21,7 @@
 			<h2 class="clear">Queue Instructions</h2>
 
 			<button id="clear" class="styleButton" onclick="clearQueue()" style="float: right; margin-top: 50px">Clear</button>
+			<button id="march" class="styleButton" onclick="imperialMarch()" style="float: right; margin-top: 50px; margin-right: 50px">Imperial March</button>
 
 			<div class="content" style="width: 100%; clear: both;">
 				<div class="container" style="width: 500px; float:right;">
@@ -106,6 +107,7 @@ document.getElementById("speedStepsInput")
 ];
 var duration = document.getElementById("duration");
 //predefines
+var stopCountsPerSecond = 1000;
 var maxSentCommands = 10;
 var buttonOpCode = ["M", "G", "S"];
 var buttonCommands = ["Move", "Goto", "Stop"];
@@ -152,22 +154,12 @@ document.getElementById("add").addEventListener("click", function(){
 			queueFlag = 1;
 		}
 		var stepInputValue = parseInt(floatInputs[1].value);
-		var stepRateInputValue = Math.round(parseFloat(floatInputs[3].value));
+		var stepRateInputValue = parseFloat(floatInputs[3].value);
 		if(selectedButton == 2){
-			stepInputValue = Math.round( 1000 * parseFloat(duration.value) );
-			stepRateInputValue = 200;
+			addStop(queueFlag, parseFloat(duration.value));
+		} else {
+			addMove(buttonOpCode[selectedButton], queueFlag, stepInputValue, stepRateInputValue);
 		}
-		constructRow({cells : [buttonCommands[selectedButton], stepInputValue, stepRateInputValue]});
-
-		var newCommand = {
-			code : buttonOpCode[selectedButton],
-			data : [
-				queueFlag,
-				stepInputValue,
-				stepRateInputValue
-			]
-		}
-		commandList.commands.push(newCommand);
 	}
 });
 
@@ -273,6 +265,25 @@ function crossCalculate(conversion) {
 		duration.value = "0 Unknown";
 	}
 }
+function imperialMarch(){
+	addStop(0,1);
+	var f = 349, gS = 415, a = 440, cH = 523, eH = 659, fH = 698;
+
+	var song = [a, .5, a, .5,a, .5,f, .35 , cH, .15 , a, .5 , f,
+		.35 , cH, .15 , a, .65, "s" , .15, eH, .5 , eH, .5 , eH,
+		.5 , fH, .35 , cH, .15 , gS, .5 , 	f, .35 , cH, .15 , a,
+		.65];
+	clearQueue();
+
+	for (var a = 0; a < song.length; a+=2){
+		if (song[a] == "s"){
+			addStop(1, song[a+1]);
+		} else {
+			addMove("M", 1, song[a] * song[a+1] * 4, song[a] * 4);
+		}
+		addStop(1,.01);
+	}
+}
 function isValidCommand(){
 	isValid = true;
 	errMessage = ""; 
@@ -292,6 +303,27 @@ function isValidCommand(){
 		alert(errMessage);
 	}
 	return isValid;
+}
+function addStop(queueFlag,time){
+	stepInputValue = Math.round(stopCountsPerSecond * time);
+	addCommand("S", queueFlag, stepInputValue, stopCountsPerSecond);
+}
+function addMove(code, queueFlag, stepInputValue, stepRateInputValue){
+	stepInputValue = Math.round(stepInputValue);
+	stepRateInputValue = Math.round(stepRateInputValue);
+	addCommand(code, queueFlag, stepInputValue, stepRateInputValue);
+}
+function addCommand(code, queueFlag, stepInputValue, stepRateInputValue){
+	constructRow({cells : [code, stepInputValue, stepRateInputValue]});
+	var newCommand = {
+		code : code,
+		data : [
+			queueFlag,
+			stepInputValue,
+			stepRateInputValue
+		]
+	};
+	commandList.commands.push(newCommand);
 }
 function clearQueue(){
 	while (table.rows.length > 0)
