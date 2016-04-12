@@ -18,7 +18,7 @@ static struct espconn tcp_server;
 
 static struct espconn *tcp_connections[MAX_CONNECTIONS];
 
-volatile static char *json_wifi_query;
+volatile static char *json_wifi_query = NULL;
 volatile static int json_wifi_conn = 0;
 
 void (*json_packet_callback)(char *) = NULL;
@@ -120,7 +120,7 @@ void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short 
 			pdata = os_strstr(pdata, "{");
 			if (pdata != NULL)
 			{
-				json_wifi_query = os_malloc(os_strlen(pdata));
+				json_wifi_query = os_zalloc(os_strlen(pdata) + 1);
 				os_strcpy(json_wifi_query, pdata);
 			}
 		}
@@ -170,6 +170,7 @@ void ICACHE_FLASH_ATTR tcp_disconnect_callback(void *arg)
 		{
 			json_packet_callback(json_wifi_query);
 			os_free(json_wifi_query);
+			json_wifi_query = NULL;
 		}
 		os_free(tcp_connections[conn]);
 		tcp_connections[conn] = NULL;
