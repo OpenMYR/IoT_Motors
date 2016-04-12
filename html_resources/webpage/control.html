@@ -22,6 +22,7 @@
 
 			<button id="clear" class="styleButton" onclick="clearQueue()" style="float: right; margin-top: 50px">Clear</button>
 			<button id="march" class="styleButton" onclick="imperialMarch()" style="float: right; margin-top: 50px; margin-right: 50px">Imperial March</button>
+			<button id="indiana" class="styleButton" onclick="indianaJones()" style="float: right; margin-top: 50px; margin-right: 50px">Indiana Jones</button>
 
 			<div class="content" style="width: 100%; clear: both;">
 				<div class="container" style="width: 500px; float:right;">
@@ -112,6 +113,8 @@ var maxSentCommands = 10;
 var buttonOpCode = ["M", "G", "S"];
 var buttonCommands = ["Move", "Goto", "Stop"];
 var buttonCommandDisplays = ["Move a relative distance.", "Goto an absolute position.", "Stop and dwell for some time."];
+var c = 261, d = 294, e = 329, f = 349, g = 391, gS = 415, a = 440, aS = 455, b = 466, cH = 523,
+	cSH = 554, dH = 587, dSH = 622, eH = 659, fH = 698, fSH = 740, gH = 784, gSH = 830, aH = 880;
 //variables
 var selectedButton = -1;
 var stepsToDegrees = stepsPerRotation / 360;
@@ -266,19 +269,26 @@ function crossCalculate(conversion) {
 	}
 }
 function imperialMarch(){
-	addStop(0,1);
-	var f = 349, gS = 415, a = 440, cH = 523, eH = 659, fH = 698;
-
 	var song = [a, .5, a, .5,a, .5,f, .35 , cH, .15 , a, .5 , f,
-		.35 , cH, .15 , a, .65, "s" , .15, eH, .5 , eH, .5 , eH,
+		.35 , cH, .15 , a, .65, "S" , .15, eH, .5 , eH, .5 , eH,
 		.5 , fH, .35 , cH, .15 , gS, .5 , 	f, .35 , cH, .15 , a,
 		.65];
 	clearQueue();
-
+	playSong(song);
+}
+function indianaJones(){
+	var song = [e, .25, c, .125,g, .25, cH, .625, "S", .125, d, .25 , e,
+		.125 , fH, .625, "S", .125, a, .25, b, .125, cH, .167, dH, .167, eH, .167];
+	clearQueue();
+	playSong(song);
+}
+function playSong(song){
+	addStop(0,0);
 	for (var a = 0; a < song.length; a+=2){
-		if (song[a] == "s"){
+		if (song[a] == "S"){
 			addStop(1, song[a+1]);
 		} else {
+			addMove("M", 1, 10, 1500);
 			addMove("M", 1, song[a] * song[a+1] * 4, song[a] * 4);
 		}
 		addStop(1,.01);
