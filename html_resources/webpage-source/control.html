@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Motor Control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta name="description" content="This is where you add the website description." />
+	<meta name="keywords" content="keywords, for the site, go here, separated, by commas" />
+	<link rel="stylesheet" type="text/css" media="screen" href="css/default.css" />
+</head>
+<body id="index_page"> 
+	<div id="wrapper">
+		<div id="header">
+			<h1>OpenMYR</h1>
+		</div>    
+		<ul id="navigation">
+			<li id="contact_us"><a href="control.html">Control</a></li>
+			<li id="about_us"><a href="config.html">Configure</a></li>
+			<li id="index"><a href="index.html">Home</a></li>
+		</ul>
+		<div id="content">
+			<h2 class="clear">Queue Instructions</h2>
+
+			<button id="clear" class="styleButton" onclick="clearQueue()" style="float: right; margin-top: 50px">Clear</button>
+			<button id="march" class="styleButton" onclick="imperialMarch()" style="float: right; margin-top: 50px; margin-right: 50px">Imperial March</button>
+			<button id="indiana" class="styleButton" onclick="indianaJones()" style="float: right; margin-top: 50px; margin-right: 50px">Indiana Jones</button>
+
+			<div class="content" style="width: 100%; clear: both;">
+				<div class="container" style="width: 500px; float:right;">
+					<table id="queue_table" class="table-normal">
+						<thead>
+							<tr>
+								<td>Command</td>
+								<td>Code Amount</td>
+								<td>At Speed</td>
+							</tr>
+						</thead>
+						<tbody id="body">
+						</tbody>
+					</table>
+				</div>
+				<div class="container" style="width: 270px; float:left; clear: left; padding-bottom: 10px;">
+					<div class="even spaced">
+						<button id="radio0" class="styleButton" onclick="modeSelected(0)">Move</button>
+						<button id="radio1" class="styleButton" onclick="modeSelected(1)">Goto</button>
+						<button id="radio2" class="styleButton" onclick="modeSelected(2)">Stop</button>
+					</div>
+					<div class="even spaced">
+						<label id ="commandDisplay" style="padding-top: 10px">Please select a command</label>
+					</div>
+
+					<div class="catagory container">
+						<div class="even spaced">
+							<label style="width:100px; text-align: center;">Degrees</label>
+							<label style="width:100px; text-align: center;">Steps</label>
+						</div>
+						<div class="even">
+							<input id="angleInput" value="0" type="input" onchange="crossCalculate(1)" style="width:100px;">
+							<input id="stepInput" value="0" type="input"  onchange="crossCalculate(0)" style="width:100px;">
+						</div>
+					</div>
+
+					<div class="catagory container">
+						<div class="even spaced">
+							<label style="width:100px; text-align: center;">Degrees/Sec</label>
+							<label style="width:100px; text-align: center;">Steps/Sec</label>
+						</div>
+						<div class="even">
+							<input id="speedAngleInput" value="0" type="input" onchange="crossCalculate(3)" style="width:100px;">
+							<input id="speedStepsInput" value="0" type="input" onchange="crossCalculate(2)" style="width:100px;">
+						</div>
+					</div>
+
+					<div class="catagory container">
+						<div class="even spaced">
+							<label>Duration</label>
+						</div>
+						<div class="even">
+							<input id="duration" value="0 Seconds" type="input" readonly="true" style="width:200px; background-color: #c3c3c3; text-align: center;">
+						</div>
+					</div>
+					<div class="even spaced">
+						<input id="add" type="button" value="Add to Queue" style="width:100px;">
+						<input id="execute" type="button" value="Send Queue" style="width:100px;">
+					</div>
+				</div>
+			</div>
+			<p id="footer">Go to <a href="http://www.OpenMYR.com/">OpenMYR.com</a> for more info</p>
+		</div>
+	</div>
+</body>
+<script type="text/javascript">
+var stepsPerRotation=400,table=document.getElementById("body"),command=document.getElementById("commandDisplay"),angle=document.getElementById("angleInput"),radioButtons=[document.getElementById("radio0"),document.getElementById("radio1"),document.getElementById("radio2")],floatInputs=[document.getElementById("angleInput"),document.getElementById("stepInput"),document.getElementById("speedAngleInput"),document.getElementById("speedStepsInput")],duration=document.getElementById("duration"),stopCountsPerSecond=
+1E3,maxSentCommands=10,buttonOpCode=["M","G","S"],buttonCommands=["Move","Goto","Stop"],buttonCommandDisplays=["Move a relative distance.","Goto an absolute position.","Stop and dwell for some time."],c=261,d=294,e=329,f=349,g=391,gS=415,a=440,aS=455,b=466,cH=523,cSH=554,dH=587,dSH=622,eH=659,fH=698,fSH=740,gH=784,gSH=830,aH=880,selectedButton=-1,stepsToDegrees=stepsPerRotation/360,moreDataWaiting=!1,dataParts=[],httpRequest=new XMLHttpRequest;
+httpRequest.onreadystatechange=function(){4==httpRequest.readyState&&(202==httpRequest.status?0<dataParts.length&&setTimeout(function(){send(dataParts.shift())},1E3):(dataParts=[],alert("An error has occured making the request")))};for(var commandList={commands:[]},i=0;i<floatInputs.length;i++)floatInputs[i].addEventListener("blur",bluredFloatInput),floatInputs[i].addEventListener("keypress",changedFloatInput);duration.addEventListener("blur",bluredTimeInput);
+document.getElementById("add").addEventListener("click",function(){if(isValidCommand()){var h=0;commandList.commands.length&&(h=1);var k=parseInt(floatInputs[1].value),l=parseFloat(floatInputs[3].value);2==selectedButton?addStop(h,parseFloat(duration.value)):addMove(buttonOpCode[selectedButton],h,k,l)}});document.getElementById("execute").addEventListener("click",function(){send(commandList)});
+function constructRow(h){var k=table.insertRow(table.rows.length);k.insertCell().innerHTML="<b>"+h.cells[0]+"</b>";k.insertCell().innerHTML=h.cells[1];k.insertCell().innerHTML=h.cells[2];return k}
+function modeSelected(h){selectedButton=h;radioButtons[h].style.backgroundColor="#1A801A";radioButtons[(h+1)%3].style.backgroundColor="#303030";radioButtons[(h+2)%3].style.backgroundColor="#303030";command.innerHTML=buttonCommandDisplays[h];duration.style.backgroundColor=2==h?"#fff":"#c3c3c3";duration.readOnly=2!=h;for(var k=0;4>k;k++)floatInputs[k].style.backgroundColor=2!=h?"#fff":"#c3c3c3",floatInputs[k].readOnly=2==h}
+function changedFloatInput(){if(13==event.charCode||45==event.charCode||46==event.charCode&&-1==event.target.value.indexOf("."))return!0;48<=event.charCode&&57>=event.charCode||(event.preventDefault?event.preventDefault():event.returnValue=!1)}function bluredFloatInput(){var h=parseFloat(event.target.value||0);isNaN(h)?event.target.value=0:event.target.value=h}
+function bluredTimeInput(){var h=parseFloat(event.target.value||0);isNaN(h)?event.target.value="0 Seconds":event.target.value=h+" Seconds"}
+function send(h){if(h.commands.length>maxSentCommands){dataParts=[];for(var k=0;k<h.commands.length;k+=maxSentCommands){var l={commands:h.commands.slice(k,Math.min(k+maxSentCommands,h.commands.length))};dataParts.push(l)}h=dataParts.shift()}httpRequest.open("POST","/",!0);httpRequest.setRequestHeader("Content-type","application/x-www-form-urlencoded");httpRequest.send(JSON.stringify(h))}
+function crossCalculate(h){var k=parseFloat(event.target.value);isNaN(k)&&(k=0);1==h%2?floatInputs[h].value=k*stepsToDegrees:0==h%2&&(floatInputs[h].value=k/stepsToDegrees);0!=floatInputs[3]&&(h=parseInt(floatInputs[1].value),k=Math.round(parseFloat(floatInputs[3].value)),0==k||isNaN(h)||isNaN(k)?duration.value="0 Seconds":duration.value=Math.abs(h/k)+" Seconds");1==selectedButton&&(duration.value="0 Unknown")}
+function imperialMarch(){var h=[a,.5,a,.5,a,.5,f,.35,cH,.15,a,.5,f,.35,cH,.15,a,.65,"S",.15,eH,.5,eH,.5,eH,.5,fH,.35,cH,.15,gS,.5,f,.35,cH,.15,a,.65];clearQueue();playSong(h)}function indianaJones(){var h=[e,.25,c,.125,g,.25,cH,.625,"S",.125,d,.25,e,.125,fH,.625,"S",.125,a,.25,b,.125,cH,.167,dH,.167,eH,.167];clearQueue();playSong(h)}
+function playSong(h){addStop(0,0);for(var k=0;k<h.length;k+=2)"S"==h[k]?addStop(1,h[k+1]):(addMove("M",1,10,1500),addMove("M",1,h[k]*h[k+1]*4,4*h[k])),addStop(1,.01)}
+function isValidCommand(){isValid=!0;errMessage="";-1==selectedButton&&(errMessage+="Please select a command.\n",isValid=!1);0>Math.round(parseFloat(floatInputs[3].value))&&(errMessage+="Step rate must be positive.\n",isValid=!1);0>Math.round(parseFloat(duration.value))&&2==selectedButton&&(errMessage+="Stop time must be positive.\n",isValid=!1);isValid||alert(errMessage);return isValid}
+function addStop(h,k){stepInputValue=Math.round(stopCountsPerSecond*k);addCommand("S",h,stepInputValue,stopCountsPerSecond)}function addMove(h,k,l,m){l=Math.round(l);m=Math.round(m);addCommand(h,k,l,m)}function addCommand(h,k,l,m){constructRow({cells:[h,l,m]});commandList.commands.push({code:h,data:[k,l,m]})}function clearQueue(){for(;0<table.rows.length;)table.deleteRow(0);commandList.commands=[]};
+</script>
+</html>
