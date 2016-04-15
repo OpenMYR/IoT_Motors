@@ -15,6 +15,8 @@
 #include "osapi.h"
 #include "mem.h"
 
+#define CONCURRENT_SOFTAP_CONNECTIONS 1
+
 static int num_retries = 0;
 
 void print_ip ( unsigned int ip )
@@ -91,7 +93,7 @@ void change_opmode(mode_switch newmode, char *ssid, char *pass)
 		struct softap_config apConfig;
 		wifi_softap_get_config(&apConfig);
 		apConfig.channel = 7;
-		apConfig.max_connection = 8;
+		apConfig.max_connection = CONCURRENT_SOFTAP_CONNECTIONS;
 		apConfig.ssid_hidden = 0;
 		wifi_softap_set_config(&apConfig);
 	}
@@ -109,7 +111,7 @@ void wifi_init()
 		case BROADCAST:
 			wifi_softap_get_config(&apConfig);
 			apConfig.channel = 7;
-			apConfig.max_connection = 8;
+			apConfig.max_connection = CONCURRENT_SOFTAP_CONNECTIONS;
 			apConfig.ssid_hidden = 0;
 			wifi_softap_set_config(&apConfig);
 			break;
@@ -120,6 +122,8 @@ void wifi_init()
 		default:
 			break;
 	}
+	int one = 1;
+	wifi_softap_set_dhcps_offer_option(OFFER_ROUTER, &one);
 	udp_setup();
 	tcp_setup();
 	wifi_set_event_handler_cb ( wifi_event );
