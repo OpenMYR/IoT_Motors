@@ -1,3 +1,5 @@
+#define ICACHE_FLASH
+
 #include "c_types.h"
 #include "command_layer.h"
 #include "hw_timer.h"
@@ -81,7 +83,7 @@ void wifi_process_command(struct wifi_command_packet *packet, uint8 *ip_addr)
 	
 }
 
-void json_process_command(char *json_input)
+void ICACHE_FLASH_ATTR json_process_command(char *json_input)
 {
 	jsmn_init(&json_parser);
 	jsmntok_t tokens[JSON_TOKEN_AMOUNT] = {0};
@@ -94,11 +96,13 @@ void json_process_command(char *json_input)
 	int place = 0;
 	while(place < len)
 	{
+		os_printf("JSON token %d\n");
 		switch(tokens[place].type)
 		{
 			case JSMN_STRING:
 				if(os_memcmp("code", json_input + tokens[place].start, os_strlen("code")) == 0)
 				{
+					os_printf("opcode\n");
 					char json_opcode = *(json_input + tokens[place+1].start);
 					uint8 dummy_ip[4];
 					switch(json_opcode)
@@ -122,6 +126,7 @@ void json_process_command(char *json_input)
 						case 'S':
 						case 'G':
 						{
+							os_printf("M, S or G\n");
 							struct stepper_command_packet parsed_motor_command;
 							parsed_motor_command.port = 0;
 							parsed_motor_command.opcode = json_opcode;
@@ -153,6 +158,49 @@ void json_process_command(char *json_input)
 							place +=7;
 							break;
 						}
+						case 'R':
+							//steps per degree
+						{
+							break;
+						}
+						case 'B':
+							//servo bounds
+						{
+							os_printf("B\n");
+							struct stepper_command_packet stop_packet;
+							stop_packet.queue = 0;
+							stop_packet.opcode = 'S';
+							stop_packet.port = 0;
+							stop_packet.step_num = 0;
+							stop_packet.step_rate = 0;
+							command = stop_packet;
+							command_address[0] = 0;
+							command_address[1] = 0;
+							command_address[2] = 0;
+							command_address[3] = 0;
+							issue_command();
+							clear_queue();
+							int place_tracker = 0;
+							int bound = 0;
+							for(place_tracker; place_tracker < (tokens[place+4].end - tokens[place+4].start); place_tracker++)
+							{
+								bound *= 10;
+								bound += *(json_input + tokens[place+4].start + place_tracker) - 48;
+							}
+							change_motor_setting(MIN_SERVO_BOUND, bound);
+							os_printf("Min: %d\n", bound);
+							bound = 0;
+							place_tracker = 0;
+							for(place_tracker; place_tracker < (tokens[place+5].end - tokens[place+5].start); place_tracker++)
+							{
+								bound *= 10;
+								bound += *(json_input + tokens[place+5].start + place_tracker) - 48;
+							}
+							change_motor_setting(MAX_SERVO_BOUND, bound);
+							os_printf("Max: %d\n", bound);
+							place += 6;
+							break;
+						}
 						default:
 							os_printf("Opcode %c not found!\n", json_opcode);
 							return;
@@ -162,6 +210,7 @@ void json_process_command(char *json_input)
 				}
 			case JSMN_OBJECT:
 			case JSMN_ARRAY:
+				os_printf("JSON Object or Array %d\n");
 				place++;
 				break;
 			case JSMN_PRIMITIVE:

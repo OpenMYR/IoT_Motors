@@ -103,7 +103,7 @@ void ICACHE_FLASH_ATTR tcp_recv_callback(void *arg, char *pdata, unsigned short 
 			espconn_send(&tcp_server, index_page, INDEX_PAGE_LEN + INDEX_OK_LEN);
 		}
 	}
-	else if(os_strstr(pdata, "POST /") != NULL)
+	else if(os_strstr(pdata, "POST") != NULL)
 	{
 		if(os_strstr(pdata, "control.html") != NULL)
 		{

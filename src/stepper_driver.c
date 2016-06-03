@@ -1,3 +1,6 @@
+#define ICACHE_FLASH
+
+#include "c_types.h"
 #include "motor_driver.h"
 #include "gpio_driver.h"
 #include "user_config.h"
@@ -100,6 +103,18 @@ float calculate_step_incrementor(unsigned short input_step_rate)
 void driver_logic_task(os_event_t *events)
 {
 
+}
+
+void ICACHE_FLASH_ATTR change_motor_setting(config_setting input, int data)
+{
+	switch(input)
+	{
+		case MIN_SERVO_BOUND:
+		case MAX_SERVO_BOUND:
+			break;
+		case MICROSTEPPING:
+			break;
+	}
 }
 
 int is_motor_running(char motor_id)

@@ -1,3 +1,6 @@
+#define ICACHE_FLASH
+
+#include "c_types.h"
 #include "gpio_driver.h"
 #include "motor_driver.h"
 #include "osapi.h"
@@ -31,6 +34,9 @@ static volatile long int step_pool;
 static volatile char opcode = ' ';
 static volatile int command_done = 1;
 
+static volatile int minimum_ticks = SERVO_TICKS_FLOOR;
+static volatile int maximum_ticks = SERVO_TICKS_CEILING;
+
 
 void step_driver ( void )
 {
@@ -61,13 +67,13 @@ void step_driver ( void )
 void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
 {
 	int tick_total = high_ticks+step_num;
-	if(tick_total > SERVO_TICKS_CEILING)
+	if(tick_total > maximum_ticks)
 	{
-		goal_high_ticks = SERVO_TICKS_CEILING;
+		goal_high_ticks = maximum_ticks;
 	}
-	else if(tick_total < SERVO_TICKS_FLOOR)
+	else if(tick_total < minimum_ticks)
 	{
-		goal_high_ticks = SERVO_TICKS_FLOOR;
+		goal_high_ticks = minimum_ticks;
 	}
 	else
 	{
@@ -87,7 +93,7 @@ void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
 
 void opcode_goto(signed int step_num, unsigned short step_rate, char motor_id)
 {
-	goal_high_ticks = ((step_num <= SERVO_TICKS_CEILING) && (step_num >= SERVO_TICKS_FLOOR))
+	goal_high_ticks = ((step_num <= maximum_ticks) && (step_num >= minimum_ticks))
 		? step_num : goal_high_ticks;
 	rate_counter = 0.0;
 	rate_incrementor = calculate_step_incrementor(step_rate);
@@ -105,7 +111,7 @@ void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 {
 	motor_state = PAUSED;
 	goal_high_ticks = PAUSED_HIGH_TICKS;
-	step_pool = precision * wait_time;
+	step_pool = abs(wait_time) / calculate_step_incrementor (precision);
 	rate_incrementor = 1;
 	rate_counter = 0.0;
 	opcode = 'S';
@@ -141,6 +147,21 @@ void driver_logic_task(os_event_t *events)
 			next_high_ticks += steps_to_take * motor_state;
 			step_pool -= steps_to_take;
 		}
+	}
+}
+
+void ICACHE_FLASH_ATTR change_motor_setting(config_setting input, int data)
+{
+	switch(input)
+	{
+		case MIN_SERVO_BOUND:
+			minimum_ticks = data;
+			break;
+		case MAX_SERVO_BOUND:
+			maximum_ticks = data;
+			break;
+		case MICROSTEPPING:
+			break;
 	}
 }
 

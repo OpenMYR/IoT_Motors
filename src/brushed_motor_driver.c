@@ -1,3 +1,6 @@
+#define ICACHE_FLASH
+
+#include "c_types.h"
 #include "gpio_driver.h"
 #include "motor_driver.h"
 #include "osapi.h"
@@ -11,7 +14,7 @@
 #define PULSE_LENGTH_TICKS (PULSE_LENGTH_US / RESOLUTION_US)
 #define SECOND_LENGTH_TICKS 1000000 / RESOLUTION_US
 
-void set_duty_cycle (unsigned short step_rate);
+void ICACHE_FLASH_ATTR set_duty_cycle (unsigned short step_rate);
 
 static volatile enum motor_direction motor_state = PAUSED;
 static volatile float duty_ratio = 1;
@@ -140,7 +143,7 @@ void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 	eio_low(GPIO_STEP_DIR);
 }
 
-void set_duty_cycle (unsigned short step_rate)
+void ICACHE_FLASH_ATTR set_duty_cycle (unsigned short step_rate)
 {
 	float bob = step_rate;
 	if(bob > STEP_RATE_MAX)
@@ -165,6 +168,10 @@ float calculate_step_incrementor(unsigned short input_step_rate)
 }
 
 void driver_logic_task(os_event_t *events)
+{
+}
+
+void ICACHE_FLASH_ATTR change_motor_setting(config_setting input, int data)
 {
 }
 
