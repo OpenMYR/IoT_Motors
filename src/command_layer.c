@@ -42,9 +42,9 @@ void initialize_command_layer()
 
 void motor_process_command(struct stepper_command_packet *packet, uint8 *ip_addr)
 {
-	if (packet->queue && ( !is_queue_empty() ||  is_motor_running(0) ) )
+	if (packet->queue && ( !is_queue_empty(0) ||  is_motor_running(0) ) )
 	{
-		store_command(packet, ip_addr);
+		store_command(packet, ip_addr, 0);
 	}
 	else
 	{
@@ -54,7 +54,7 @@ void motor_process_command(struct stepper_command_packet *packet, uint8 *ip_addr
 		command_address[2] = ip_addr[2];
 		command_address[3] = ip_addr[3];
 		issue_command();
-		clear_queue();
+		clear_queue(0);
 	}
 	
 }
@@ -179,7 +179,7 @@ void ICACHE_FLASH_ATTR json_process_command(char *json_input)
 							command_address[2] = 0;
 							command_address[3] = 0;
 							issue_command();
-							clear_queue();
+							clear_queue(0);
 							int place_tracker = 0;
 							int bound = 0;
 							for(place_tracker; place_tracker < (tokens[place+4].end - tokens[place+4].start); place_tracker++)
@@ -253,11 +253,11 @@ void issue_command()
 
 void fetch_command()
 {
-	if(!is_queue_empty())
+	if(!is_queue_empty(0))
 	{
-		command = get_command()->packet;
-		os_memcpy(command_address, get_command()->ip_addr, 4);
-		remove_first_command();
+		command = get_command(0)->packet;
+		os_memcpy(command_address, get_command(0)->ip_addr, 4);
+		remove_first_command(0);
 		issue_command();
 	}
 }

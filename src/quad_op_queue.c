@@ -1,7 +1,7 @@
 #include "op_queue.h"
 #include "osapi.h"
 
-#define MOTOR_COUNT 1
+#define MOTOR_COUNT 4
 #define BUFFER_SIZE 1000 / MOTOR_COUNT
 
 static struct stepper_command_data command_queue[MOTOR_COUNT][BUFFER_SIZE];
