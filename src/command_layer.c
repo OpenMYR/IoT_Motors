@@ -19,8 +19,8 @@
 
 os_event_t task_queue[TASK_QUEUE_LENGTH];
 
-struct stepper_command_packet command;
-uint8 command_address[4];
+struct stepper_command_packet command[4];
+uint8 command_address[4][4];
 
 //static volatile jsmntok_t tokens[JSON_TOKEN_AMOUNT];
 static volatile jsmn_parser json_parser; 
@@ -42,19 +42,19 @@ void initialize_command_layer()
 
 void motor_process_command(struct stepper_command_packet *packet, uint8 *ip_addr)
 {
-	if (packet->queue && ( !is_queue_empty(0) ||  is_motor_running(0) ) )
+	if (packet->queue && ( !is_queue_empty(packet->motor_id) ||  is_motor_running(packet->motor_id) ) )
 	{
-		store_command(packet, ip_addr, 0);
+		store_command(packet, ip_addr, packet->motor_id);
 	}
 	else
 	{
-		command = *packet;
-		command_address[0] = ip_addr[0];
-		command_address[1] = ip_addr[1];
-		command_address[2] = ip_addr[2];
-		command_address[3] = ip_addr[3];
-		issue_command();
-		clear_queue(0);
+		command[packet->motor_id] = *packet;
+		command_address[packet->motor_id][0] = ip_addr[0];
+		command_address[packet->motor_id][1] = ip_addr[1];
+		command_address[packet->motor_id][2] = ip_addr[2];
+		command_address[packet->motor_id][3] = ip_addr[3];
+		issue_command(packet->motor_id);
+		clear_queue(packet->motor_id);
 	}
 	
 }
@@ -130,6 +130,7 @@ void ICACHE_FLASH_ATTR json_process_command(char *json_input)
 							struct stepper_command_packet parsed_motor_command;
 							parsed_motor_command.port = 0;
 							parsed_motor_command.opcode = json_opcode;
+							parsed_motor_command.motor_id = 0;
 							parsed_motor_command.queue = (*(json_input + tokens[place+4].start) == '1') ? 0x01 : 0x00;
 							signed int steps = 0;
 							int place_tracker = 0;
@@ -173,12 +174,13 @@ void ICACHE_FLASH_ATTR json_process_command(char *json_input)
 							stop_packet.port = 0;
 							stop_packet.step_num = 0;
 							stop_packet.step_rate = 0;
-							command = stop_packet;
-							command_address[0] = 0;
-							command_address[1] = 0;
-							command_address[2] = 0;
-							command_address[3] = 0;
-							issue_command();
+							stop_packet.motor_id = 0;
+							command[0] = stop_packet;
+							command_address[0][0] = 0;
+							command_address[0][1] = 0;
+							command_address[0][2] = 0;
+							command_address[0][3] = 0;
+							issue_command(0);
 							clear_queue(0);
 							int place_tracker = 0;
 							int bound = 0;
@@ -222,26 +224,26 @@ void ICACHE_FLASH_ATTR json_process_command(char *json_input)
 	}
 }
 
-void issue_command()
+void issue_command(char motor_id)
 {
 	
-	if(command.opcode == 'S')
+	if(command[motor_id].opcode == 'S')
     {
         //os_printf("Stop Command, %d Delay Counts at %u counts per second\n",
             //ntohl(command.step_num), ntohs(command.step_rate));
-	    opcode_stop(ntohl(command.step_num), ntohs(command.step_rate), 0);
+	    opcode_stop(ntohl(command[motor_id].step_num), ntohs(command[motor_id].step_rate), motor_id);
     }
-    else if(command.opcode == 'M')
+    else if(command[motor_id].opcode == 'M')
     {
         //os_printf("Move Command, %d Relative Steps at %u steps per second\n",
             //ntohl(command.step_num), ntohs(command.step_rate));
-	    opcode_move(ntohl(command.step_num), ntohs(command.step_rate), 0);
+	    opcode_move(ntohl(command[motor_id].step_num), ntohs(command[motor_id].step_rate), motor_id);
     }
-    else if(command.opcode == 'G')
+    else if(command[motor_id].opcode == 'G')
     {
         //os_printf("Goto Command, %d Absolute Steps at %u steps per second\n",
             //ntohl(command.step_num), ntohs(command.step_rate));
-	    opcode_goto(ntohl(command.step_num), ntohs(command.step_rate), 0);
+	    opcode_goto(ntohl(command[motor_id].step_num), ntohs(command[motor_id].step_rate), motor_id);
     }
     else
     {
@@ -251,19 +253,19 @@ void issue_command()
 	
 }
 
-void fetch_command()
+void fetch_command(char motor_id)
 {
-	if(!is_queue_empty(0))
+	if(!is_queue_empty(motor_id))
 	{
-		command = get_command(0)->packet;
-		os_memcpy(command_address, get_command(0)->ip_addr, 4);
-		remove_first_command(0);
-		issue_command();
+		command[motor_id] = get_command(motor_id)->packet;
+		os_memcpy(command_address[motor_id], get_command(motor_id)->ip_addr, 4);
+		remove_first_command(motor_id);
+		issue_command(motor_id);
 	}
 }
 
 void acknowledge_command(os_event_t *events)
 {
-	if(command.port != 0) udp_send_ack(command.opcode, 0, command_address, ntohs(command.port));
-	fetch_command();
+	if(command[events->sig].port != 0) udp_send_ack(command[events->sig].opcode, 0, command_address[events->sig], ntohs(command[events->sig].port));
+	fetch_command(events->sig);
 }

@@ -20,6 +20,7 @@ struct stepper_command_packet {
     uint8 queue;
     signed int step_num;
     unsigned short step_rate;
+    char motor_id;
 };
 
 struct command_response_packet {
