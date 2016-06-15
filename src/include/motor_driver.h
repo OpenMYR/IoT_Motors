@@ -17,6 +17,8 @@ typedef enum
 	MICROSTEPPING
 } config_setting;
 
+void init_motor_gpio();
+
 void step_driver ( void );
 void opcode_move(signed int step_num, unsigned short step_rate, char motor_id);
 void opcode_goto(signed int step_num, unsigned short step_rate, char motor_id);

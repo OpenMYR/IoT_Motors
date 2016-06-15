@@ -27,6 +27,7 @@ static volatile jsmn_parser json_parser;
 
 void initialize_command_layer()
 {
+	init_motor_gpio();
 	register_motor_packet_callback(*motor_process_command);
 	register_wifi_packet_callback(*wifi_process_command);
 	register_tcp_json_callback(*json_process_command);

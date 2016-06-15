@@ -6,7 +6,11 @@
  *
  */
  
+#define ICACHE_FLASH
+
+#include "c_types.h"
 #include "gpio_driver.h"
+#include "eagle_soc.h"
 #include "ets_sys.h"
 #include "osapi.h"
 #include "os_type.h"
@@ -72,7 +76,7 @@ eio_low ( int gpio )
 	gpio_output_set ( 0, mask, mask, 0);
 }
 
-void
+void ICACHE_FLASH_ATTR
 eio_setup ( int gpio )
 {
 	if ( evil[gpio] ) {
@@ -81,4 +85,18 @@ eio_setup ( int gpio )
 	}
 
 	PIN_FUNC_SELECT ( mux[gpio], func[gpio] );
+}
+
+void eio_quad_shift(unsigned int input)
+{
+//GPIO_REG_WRITE(GPIO_OUT_ADDRESS, input);
+    //os_printf("Set %d Clear %d Register ", input, !input);
+    GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, input);
+    GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, ~input);
+    //os_printf("%d\n", GPIO_REG_READ(GPIO_OUT_ADDRESS));
+}
+
+void eio_quad_enable()
+{
+    GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, 0x7010);
 }

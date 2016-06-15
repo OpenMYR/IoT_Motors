@@ -7,6 +7,13 @@
 #include "udp.h"
 #include "user_config.h"
 
+#define GPIO_STEP 4
+#define GPIO_STEP_ENABLE 5
+#define GPIO_STEP_DIR 13
+#define GPIO_USTEP_A 0
+#define GPIO_USTEP_B 14
+#define GPIO_USTEP_C 12
+
 #define STEP_RATE_MAX 1000
 #define PULSE_LENGTH_US 2000
 #define PULSE_FREQUENCY (1 / (PULSE_LENGTH_US * 0.000001))
@@ -30,6 +37,23 @@ static volatile float inaccuracy_compensation_counter = 0;
 
 static volatile char opcode = ' ';
 static volatile int command_done = 1;
+
+void init_motor_gpio()
+{
+	eio_setup ( GPIO_STEP );
+	eio_setup ( GPIO_USTEP_A );
+	eio_setup ( GPIO_USTEP_B );
+	eio_setup ( GPIO_USTEP_C );
+	eio_setup ( GPIO_STEP_DIR);
+	eio_setup(GPIO_STEP_ENABLE);
+
+	eio_low ( GPIO_STEP );
+	eio_high( GPIO_USTEP_A );
+	eio_high( GPIO_USTEP_B );
+	eio_high( GPIO_USTEP_C );
+	eio_low ( GPIO_STEP_DIR);
+	eio_low(GPIO_STEP_ENABLE);
+}
 
 void step_driver ( void )
 {

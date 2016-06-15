@@ -21,22 +21,6 @@ void user_init()
 	os_printf("\n");
 	os_printf("SDK version:%s\n", system_get_sdk_version());
 	system_print_meminfo();
-	
-	eio_setup ( GPIO_STEP );
-	eio_setup ( 0);
-	eio_setup ( 14 );
-	eio_setup ( 12 );
-	eio_setup ( GPIO_STEP_DIR);
-	eio_setup(GPIO_STEP_ENABLE);
-	os_printf ( "Ready 1\n");
-
-	eio_low ( GPIO_STEP );
-	eio_high( 0 );
-	eio_high( 14 );
-	eio_high( 12 );
-	eio_low ( GPIO_STEP_DIR);
-	eio_low(GPIO_STEP_ENABLE);
-	os_printf ( "Ready 2\n");
 }
 
 /* THE END */

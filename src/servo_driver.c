@@ -7,6 +7,8 @@
 #include "udp.h"
 #include "user_config.h"
 
+#define GPIO_STEP 4
+
 #define PAUSED_HIGH_TICKS 501
 #define SERVO_TICKS_FLOOR 150
 #define SERVO_TICKS_CEILING 500
@@ -37,6 +39,12 @@ static volatile int command_done = 1;
 static volatile int minimum_ticks = SERVO_TICKS_FLOOR;
 static volatile int maximum_ticks = SERVO_TICKS_CEILING;
 
+void init_motor_gpio()
+{
+	eio_setup ( GPIO_STEP );
+
+	eio_low ( GPIO_STEP );
+}
 
 void step_driver ( void )
 {

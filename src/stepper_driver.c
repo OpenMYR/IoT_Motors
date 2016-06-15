@@ -9,6 +9,13 @@
 
 #define PULSE_FREQUENCY (1 / (RESOLUTION_US * 0.000001))
 
+#define GPIO_STEP 4
+#define GPIO_STEP_ENABLE 5
+#define GPIO_STEP_DIR 13
+#define GPIO_USTEP_A 0
+#define GPIO_USTEP_B 14
+#define GPIO_USTEP_C 12
+
 static volatile unsigned long step_pool = 0;
 static volatile signed long stepper_position = 0;
 
@@ -20,6 +27,23 @@ static volatile char opcode = ' ';
 static volatile float rate_counter = 0.0; 
 static volatile float rate_incrementor = 0.2;
 static const float step_threshold = 1;
+
+void init_motor_gpio()
+{
+	eio_setup ( GPIO_STEP );
+	eio_setup ( GPIO_USTEP_A );
+	eio_setup ( GPIO_USTEP_B );
+	eio_setup ( GPIO_USTEP_C );
+	eio_setup ( GPIO_STEP_DIR);
+	eio_setup(GPIO_STEP_ENABLE);
+
+	eio_low ( GPIO_STEP );
+	eio_high( GPIO_USTEP_A );
+	eio_high( GPIO_USTEP_B );
+	eio_high( GPIO_USTEP_C );
+	eio_low ( GPIO_STEP_DIR);
+	eio_low(GPIO_STEP_ENABLE);
+}
 
 void step_driver ( void )
 {
