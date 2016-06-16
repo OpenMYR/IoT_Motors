@@ -4,7 +4,7 @@
 #include "c_types.h"
 #include "ip_addr.h"
 
-#define CTRL_PACKET_LEN_BYTES 10
+#define CTRL_PACKET_LEN_BYTES 11
 #define WIFI_PACKET_LEN_BYTES 96
 
 uint16 ntohs( uint16 input );

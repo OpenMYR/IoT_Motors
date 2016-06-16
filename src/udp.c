@@ -45,7 +45,7 @@ void udp_recv_callback(void *arg, char *pdata, unsigned short len)
 	}
 	else
 	{
-		os_printf("Packet incorrect size! Frog blast the vent core!\n");
+		os_printf("Packet incorrect size! Recieved length %d!\n", len);
 	}
 	
 }

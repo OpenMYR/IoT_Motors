@@ -89,11 +89,9 @@ eio_setup ( int gpio )
 
 void eio_quad_shift(unsigned int input)
 {
-//GPIO_REG_WRITE(GPIO_OUT_ADDRESS, input);
-    //os_printf("Set %d Clear %d Register ", input, !input);
     GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, input);
     GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, ~input);
-    //os_printf("%d\n", GPIO_REG_READ(GPIO_OUT_ADDRESS));
+    //os_printf("Set %04x Clear %04x Register %04x\n", input, ~input, GPIO_REG_READ(GPIO_OUT_ADDRESS));
 }
 
 void eio_quad_enable()

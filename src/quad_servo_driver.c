@@ -29,11 +29,10 @@
 //static const int quad_gpio[4] = {GPIO_STEP_A, GPIO_STEP_B, GPIO_STEP_C, GPIO_STEP_D};
 
 static volatile int ticks = 0;
-static volatile int high_ticks[4] = {[0 ... 3] = SERVO_TICKS_CEILING};
+static volatile int high_ticks[4] = {[0 ... 3] = 170};
 static volatile enum motor_direction motor_state[4] = {[0 ... 3] = PAUSED};
-static volatile int next_high_ticks[4] = {[0 ... 3] =SERVO_TICKS_CEILING};
-static volatile int goal_high_ticks[4] = {[0 ... 3] = SERVO_TICKS_CEILING};
-static volatile int step_rate = 100;
+static volatile int next_high_ticks[4] = {[0 ... 3] = 170};
+static volatile int goal_high_ticks[4] = {[0 ... 3] = 170};
 static volatile float rate_counter[4] = {[0 ... 3] = 0.0}; 
 static volatile float rate_incrementor[4] = {[0 ... 3] = 2};
 static const float step_threshold = 1;
@@ -43,7 +42,8 @@ static volatile int command_done[4] = {[0 ... 3] = 1};
 
 static volatile int minimum_ticks = SERVO_TICKS_FLOOR;
 static volatile int maximum_ticks = SERVO_TICKS_CEILING;
-static volatile char bitStates[4] = {[0 ... 3] = 1};
+//static volatile int bitStates[4] = {[0 ... 3] = 1};
+const unsigned int gpio_output_mask[4] = {0x0010, 0x4000, 0x1000, 0x2000};
 
 void init_motor_gpio()
 {
@@ -64,33 +64,28 @@ void init_motor_gpio()
 
 void step_driver ( void )
 {
-    ticks++;
+	ticks++;
 	if(ticks <= SERVO_TICKS_CEILING)
 	{
-		int changeMade = 0;
 		int n = 0;
-        for(n; n < 4; n++)
-        {
-			if ((ticks != high_ticks[n]) != bitStates[n]) {
-				bitStates[n] = 1 - bitStates[n];
-				changeMade = 1;
-			}
+		unsigned int gpio_output = 0;
+		for(n; n < 4; n++)
+		{
+			//bitStates[n] = (ticks != high_ticks[n]);
+			gpio_output += ((ticks <= high_ticks[n]) ? gpio_output_mask[n] : 0);
 		}
-		if (changeMade) {
-			//os_printf("low:  ");
-    		eio_quad_shift((bitStates[0] * 0x0010) + (bitStates[1] * 0x4000) + (bitStates[2] * 0x1000) + (bitStates[3] * 0x2000));
-    	}
+		eio_quad_shift(gpio_output);
 	}
-    else if(ticks == PULSE_LENGTH_TICKS)
-    {
-        ticks = 0;
-        int current_motor = 0;
-        //os_printf("high: ");
-        eio_quad_shift(0x7010);
-        //bitStates = {0,0,0,0};
-        for(current_motor; current_motor < 4; current_motor++)
-        {
-	        //eio_high ( quad_gpio[current_motor] );
+	else if(ticks == PULSE_LENGTH_TICKS)
+	{
+		ticks = 0;
+		int current_motor = 0;
+		//os_printf("high: ");
+		eio_quad_shift(0x7010);
+		//bitStates = {0,0,0,0};
+		for(current_motor; current_motor < 4; current_motor++)
+		{
+			//eio_high ( quad_gpio[current_motor] );
 			high_ticks[current_motor] = next_high_ticks[current_motor];
 			if(high_ticks[current_motor] != goal_high_ticks[current_motor])
 			{
@@ -102,7 +97,7 @@ void step_driver ( void )
 				command_done[current_motor] = 1;
 			}
 		}
-    }
+	}
 }
 
 void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
