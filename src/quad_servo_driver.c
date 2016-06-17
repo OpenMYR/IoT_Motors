@@ -1,16 +1,27 @@
 #define ICACHE_FLASH
 
 #include "c_types.h"
-#include "gpio_driver.h"
+#include "eagle_soc.h"
 #include "motor_driver.h"
 #include "osapi.h"
 #include "udp.h"
 #include "user_config.h"
 
+#define GPIO_MASK_WRITE(mask)	{												\
+									GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, mask);	\
+									GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, ~mask);	\
+								}
+
 #define GPIO_STEP_A 4
 #define GPIO_STEP_B 14
 #define GPIO_STEP_C 12
 #define GPIO_STEP_D 13
+
+#define GPIO_STEP_A_MASK 0x0010
+#define GPIO_STEP_B_MASK 0x4000
+#define GPIO_STEP_C_MASK 0x1000
+#define GPIO_STEP_D_MASK 0x2000
+#define GPIO_ALL_MASK 0x7010
 
 #define PAUSED_HIGH_TICKS 501
 #define SERVO_TICKS_FLOOR 70
@@ -43,23 +54,16 @@ static volatile int command_done[4] = {[0 ... 3] = 1};
 static volatile int minimum_ticks = SERVO_TICKS_FLOOR;
 static volatile int maximum_ticks = SERVO_TICKS_CEILING;
 //static volatile int bitStates[4] = {[0 ... 3] = 1};
-const unsigned int gpio_output_mask[4] = {0x0010, 0x4000, 0x1000, 0x2000};
+const unsigned int gpio_output_mask[4] = {GPIO_STEP_A_MASK, GPIO_STEP_B_MASK, GPIO_STEP_C_MASK, GPIO_STEP_D_MASK};
 
 void init_motor_gpio()
 {
-	eio_setup ( GPIO_STEP_A );
-	eio_setup ( GPIO_STEP_B );
-	eio_setup ( GPIO_STEP_C );
-	eio_setup ( GPIO_STEP_D );
-
-	//eio_quad_lo ( 1,1,1,1 );
-	//eio_quad_shift(0x0000);
-	eio_low(GPIO_STEP_A);
-	eio_low(GPIO_STEP_B);
-	eio_low(GPIO_STEP_C);
-	eio_low(GPIO_STEP_D);
-
-	eio_quad_enable();
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_GPIO12);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13);
+	GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, GPIO_ALL_MASK);
+	GPIO_REG_WRITE(GPIO_ENABLE_W1TC_ADDRESS, ~GPIO_ALL_MASK);
 }
 
 void step_driver ( void )
@@ -74,14 +78,14 @@ void step_driver ( void )
 			//bitStates[n] = (ticks != high_ticks[n]);
 			gpio_output += ((ticks <= high_ticks[n]) ? gpio_output_mask[n] : 0);
 		}
-		eio_quad_shift(gpio_output);
+		GPIO_MASK_WRITE(gpio_output);
 	}
 	else if(ticks == PULSE_LENGTH_TICKS)
 	{
 		ticks = 0;
 		int current_motor = 0;
 		//os_printf("high: ");
-		eio_quad_shift(0x7010);
+		GPIO_MASK_WRITE(GPIO_ALL_MASK);
 		//bitStates = {0,0,0,0};
 		for(current_motor; current_motor < 4; current_motor++)
 		{
