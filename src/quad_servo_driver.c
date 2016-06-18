@@ -89,7 +89,6 @@ void step_driver ( void )
 		//bitStates = {0,0,0,0};
 		for(current_motor; current_motor < 4; current_motor++)
 		{
-			//eio_high ( quad_gpio[current_motor] );
 			high_ticks[current_motor] = next_high_ticks[current_motor];
 			if(high_ticks[current_motor] != goal_high_ticks[current_motor])
 			{
