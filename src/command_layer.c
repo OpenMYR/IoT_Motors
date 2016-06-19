@@ -165,6 +165,21 @@ void ICACHE_FLASH_ATTR json_process_command(char *json_input)
 						{
 							break;
 						}
+						case 'U':
+						{
+							os_printf("U\n");
+							struct stepper_command_packet parsed_motor_command;
+							parsed_motor_command.port = 0;
+							parsed_motor_command.opcode = json_opcode;
+							parsed_motor_command.motor_id = 0;
+							parsed_motor_command.queue = (*(json_input + tokens[place+4].start) == '1') ? 0x01 : 0x00;
+							parsed_motor_command.step_num = 0;
+							unsigned short ustep_setting = *(json_input + tokens[place+5].start) - 48;
+							parsed_motor_command.step_rate = ntohs(ustep_setting);
+							motor_process_command(&parsed_motor_command, dummy_ip);
+							place += 6;
+							break;
+						}
 						case 'B':
 							//servo bounds
 						{
@@ -245,6 +260,10 @@ void issue_command(char motor_id)
         //os_printf("Goto Command, %d Absolute Steps at %u steps per second\n",
             //ntohl(command.step_num), ntohs(command.step_rate));
 	    opcode_goto(ntohl(command[motor_id].step_num), ntohs(command[motor_id].step_rate), motor_id);
+    }
+    else if(command[motor_id].opcode == 'U')
+    {
+    	change_motor_setting(MICROSTEPPING, ntohs(command[motor_id].step_rate));
     }
     else
     {

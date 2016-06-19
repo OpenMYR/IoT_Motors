@@ -18,16 +18,15 @@
 #define GPIO_STEP_ENABLE 5
 #define GPIO_STEP_DIR 13
 #define GPIO_USTEP_A 0
-#define GPIO_USTEP_B 14
-#define GPIO_USTEP_C 12
+#define GPIO_IO_A 14
+#define GPIO_IO_B 12
 
 #define GPIO_USTEP_A_MASK 0x0001
 #define GPIO_STEP_MASK 0x0010
 #define GPIO_STEP_ENABLE_MASK 0x0020
-#define GPIO_USTEP_C_MASK 0x1000
+#define GPIO_IO_B_MASK 0x1000
 #define GPIO_STEP_DIR_MASK 0x2000
-#define GPIO_USTEP_B_MASK 0x4000
-#define GPIO_USTEP_ALL_MASK 0x5001 
+#define GPIO_IO_A_MASK 0x4000
 #define GPIO_NOSTEP_MASK 0x7021
 #define GPIO_NODIR_MASK 0x5031
 #define GPIO_ALL_MASK 0x7031
@@ -55,7 +54,7 @@ void init_motor_gpio()
 
 	GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, GPIO_ALL_MASK);
 	GPIO_REG_WRITE(GPIO_ENABLE_W1TC_ADDRESS, ~GPIO_ALL_MASK);
-	GPIO_MASK_WRITE(GPIO_USTEP_ALL_MASK);
+	GPIO_MASK_WRITE(GPIO_USTEP_A_MASK);
 }
 
 void step_driver ( void )
@@ -157,6 +156,14 @@ void ICACHE_FLASH_ATTR change_motor_setting(config_setting input, int data)
 		case MAX_SERVO_BOUND:
 			break;
 		case MICROSTEPPING:
+			if(data > 0)
+			{
+				GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) | GPIO_USTEP_A_MASK);
+			}
+			else
+			{
+				GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_USTEP_A_MASK));
+			}
 			break;
 	}
 }
