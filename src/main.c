@@ -5,7 +5,6 @@
  * Tom Trebisky  12-27-2015
  */
 #include "c_types.h"
-#include "gpio_driver.h"
 #include "osapi.h"
 #include "user_config.h"
 #include "user_interface.h"

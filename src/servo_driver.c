@@ -1,5 +1,13 @@
 #define ICACHE_FLASH
 
+/*
+ * This whole file is depreciated due to OpenMYR
+ * only supporting quad_servo_driver and
+ * stepper_driver currently.
+ *
+ * It relies on GPIO code that no longer exists.
+ */
+
 #include "c_types.h"
 #include "gpio_driver.h"
 #include "motor_driver.h"

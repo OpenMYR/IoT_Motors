@@ -1,5 +1,11 @@
 #define ICACHE_FLASH
 
+/*
+ * This whole file is depreciated due to OpenMYR
+ * only supporting quad_servo_driver and
+ * stepper_driver currently.
+ */
+
 #include "c_types.h"
 #include "eagle_soc.h"
 #include "motor_driver.h"
