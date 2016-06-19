@@ -37,8 +37,6 @@
 #define PULSE_LENGTH_TICKS (PULSE_LENGTH_US / RESOLUTION_US)
 #define SECOND_LENGTH_TICKS 1000000 / RESOLUTION_US
 
-//static const int quad_gpio[4] = {GPIO_STEP_A, GPIO_STEP_B, GPIO_STEP_C, GPIO_STEP_D};
-
 static volatile int ticks = 0;
 static volatile int high_ticks[4] = {[0 ... 3] = 170};
 static volatile enum motor_direction motor_state[4] = {[0 ... 3] = PAUSED};
@@ -53,7 +51,6 @@ static volatile int command_done[4] = {[0 ... 3] = 1};
 
 static volatile int minimum_ticks = SERVO_TICKS_FLOOR;
 static volatile int maximum_ticks = SERVO_TICKS_CEILING;
-//static volatile int bitStates[4] = {[0 ... 3] = 1};
 const unsigned int gpio_output_mask[4] = {GPIO_STEP_A_MASK, GPIO_STEP_B_MASK, GPIO_STEP_C_MASK, GPIO_STEP_D_MASK};
 
 void init_motor_gpio()
@@ -75,8 +72,7 @@ void step_driver ( void )
 		unsigned int gpio_output = 0;
 		for(n; n < 4; n++)
 		{
-			//bitStates[n] = (ticks != high_ticks[n]);
-			gpio_output += ((ticks <= high_ticks[n]) ? gpio_output_mask[n] : 0);
+			gpio_output += (ticks <= high_ticks[n]) * gpio_output_mask[n];
 		}
 		GPIO_MASK_WRITE(gpio_output);
 	}
@@ -84,9 +80,7 @@ void step_driver ( void )
 	{
 		ticks = 0;
 		int current_motor = 0;
-		//os_printf("high: ");
 		GPIO_MASK_WRITE(GPIO_ALL_MASK);
-		//bitStates = {0,0,0,0};
 		for(current_motor; current_motor < 4; current_motor++)
 		{
 			high_ticks[current_motor] = next_high_ticks[current_motor];
