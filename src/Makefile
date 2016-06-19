@@ -5,9 +5,9 @@ CFLAGS = -I$(INCLUDE_FOLDER) -mlongcalls
 LDLIBS = -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy -Wl,--end-group -lgcc
 LDFLAGS = -Teagle.app.v6.ld
 
-OBJECTS = main.o hw_timer.o gpio_driver.o command_layer.o udp.o tcp.o wifi.o jsmn.o
+OBJECTS = main.o hw_timer.o command_layer.o udp.o tcp.o wifi.o jsmn.o
 STEPPER_OUTPUT = stepper_driver stepper_driver.o stepper_driver-0x00000.bin stepper_driver-0x40000.bin op_queue.o
-SERVO_OUTPUT = servo_driver servo_driver.o servo_driver-0x00000.bin servo_driver-0x40000.bin op_queue.o
+SERVO_OUTPUT = servo_driver servo_driver.o servo_driver-0x00000.bin servo_driver-0x40000.bin op_queue.o gpio_driver.o
 QUAD_SERVO_OUTPUT = quad_servo_driver quad_servo_driver.o quad_servo_driver-0x00000.bin quad_servo_driver-0x40000.bin quad_op_queue.o
 BRUSH_MOTOR_OUTPUT = brushed_motor_driver brushed_motor_driver.o brushed_motor_driver-0x00000.bin brushed_motor_driver-0x40000.bin op_queue.o
 
@@ -35,7 +35,7 @@ brushed_motor_driver-0x00000.bin: brushed_motor_driver
 	
 stepper_driver: $(OBJECTS) stepper_driver.o op_queue.o
 
-servo_driver: $(OBJECTS) servo_driver.o op_queue.o
+servo_driver: $(OBJECTS) servo_driver.o op_queue.o gpio_driver.o
 
 quad_servo_driver: $(OBJECTS) quad_servo_driver.o quad_op_queue.o
 

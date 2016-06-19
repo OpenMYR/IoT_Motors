@@ -1,11 +1,17 @@
 #define ICACHE_FLASH
 
 #include "c_types.h"
-#include "gpio_driver.h"
+#include "eagle_soc.h"
 #include "motor_driver.h"
 #include "osapi.h"
 #include "udp.h"
 #include "user_config.h"
+
+#define GPIO_MASK_WRITE(mask)	{												\
+									GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, (mask));	\
+									GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, ~(mask));	\
+								}
+
 
 #define GPIO_STEP 4
 #define GPIO_STEP_ENABLE 5
@@ -13,6 +19,18 @@
 #define GPIO_USTEP_A 0
 #define GPIO_USTEP_B 14
 #define GPIO_USTEP_C 12
+
+#define GPIO_USTEP_A_MASK 0x0001
+#define GPIO_STEP_MASK 0x0010
+#define GPIO_STEP_ENABLE_MASK 0x0020
+#define GPIO_USTEP_C_MASK 0x1000
+#define GPIO_STEP_DIR_MASK 0x2000
+#define GPIO_USTEP_B_MASK 0x4000
+#define GPIO_USTEP_ALL_MASK 0x5001 
+#define GPIO_NOSTEP_MASK 0x7021
+#define GPIO_NODIR_MASK 0x5031
+#define GPIO_ALL_MASK 0x7031
+#define GPIO_STOP_MASK 0xDFEF
 
 #define STEP_RATE_MAX 1000
 #define PULSE_LENGTH_US 2000
@@ -40,19 +58,16 @@ static volatile int command_done = 1;
 
 void init_motor_gpio()
 {
-	eio_setup ( GPIO_STEP );
-	eio_setup ( GPIO_USTEP_A );
-	eio_setup ( GPIO_USTEP_B );
-	eio_setup ( GPIO_USTEP_C );
-	eio_setup ( GPIO_STEP_DIR);
-	eio_setup(GPIO_STEP_ENABLE);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U, FUNC_GPIO5);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_GPIO12);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13);
 
-	eio_low ( GPIO_STEP );
-	eio_high( GPIO_USTEP_A );
-	eio_high( GPIO_USTEP_B );
-	eio_high( GPIO_USTEP_C );
-	eio_low ( GPIO_STEP_DIR);
-	eio_low(GPIO_STEP_ENABLE);
+	GPIO_REG_WRITE(GPIO_ENABLE_W1TS_ADDRESS, GPIO_ALL_MASK);
+	GPIO_REG_WRITE(GPIO_ENABLE_W1TC_ADDRESS, ~GPIO_ALL_MASK);
+	GPIO_MASK_WRITE(GPIO_USTEP_ALL_MASK);
 }
 
 void step_driver ( void )
@@ -69,13 +84,27 @@ void step_driver ( void )
 			if (gpio_change_needed)
 			{
 				gpio_change_needed = 0;
-				eio_high(motor_state == FORWARDS ? GPIO_STEP_DIR : GPIO_STEP);
+				if(motor_state == FORWARDS)
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) | GPIO_STEP_DIR_MASK);
+				}
+				else
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) | GPIO_STEP_MASK);
+				}
 			}
 			step_pool--;
 			brushed_dc_position += motor_state;
 			if(step_pool <= 1)//0?
 			{
-				eio_low(motor_state == FORWARDS ? GPIO_STEP_DIR : GPIO_STEP);
+				if(motor_state == FORWARDS)
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_DIR_MASK));
+				}
+				else
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
+				}
 				motor_state = PAUSED;
 				command_done = 1;
 				system_os_post(ACK_TASK_PRIO, 0, 0);
@@ -85,7 +114,14 @@ void step_driver ( void )
 		{
 			if (gpio_change_needed)
 			{
-				eio_low(motor_state == FORWARDS ? GPIO_STEP_DIR : GPIO_STEP);
+				if(motor_state == FORWARDS)
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_DIR_MASK));
+				}
+				else
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
+				}
 			}		
 		} 
 		//only one segment of the cycle changes between cycles, this is that segment
@@ -98,10 +134,24 @@ void step_driver ( void )
 				step_pool--;
 				brushed_dc_position += motor_state;
 				inaccuracy_compensation_counter -= tick_incrementor;
-				eio_high(motor_state == FORWARDS ? GPIO_STEP_DIR : GPIO_STEP);
+				if(motor_state == FORWARDS)
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) | GPIO_STEP_DIR_MASK);
+				}
+				else
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) | GPIO_STEP_MASK);
+				}
 				if(step_pool <= 1)//0?
 				{
-					eio_low(motor_state == FORWARDS ? GPIO_STEP_DIR : GPIO_STEP);
+					if(motor_state == FORWARDS)
+					{
+						GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_DIR_MASK));
+					}
+					else
+					{
+						GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
+					}
 					motor_state = PAUSED;
 					command_done = 1;
 					system_os_post(ACK_TASK_PRIO, 0, 0);
@@ -109,7 +159,14 @@ void step_driver ( void )
 			}
 			else {
 				gpio_change_needed = 0;
-				eio_low(motor_state == FORWARDS ? GPIO_STEP_DIR : GPIO_STEP);
+				if(motor_state == FORWARDS)
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_DIR_MASK));
+				}
+				else
+				{
+					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
+				}
 			}
 
 		}
@@ -134,7 +191,14 @@ void opcode_move(signed int step_num, unsigned short step_rate, char motor_id)
 	} else {
 		command_done = 0;
 	}
-	eio_low(motor_state == FORWARDS ? GPIO_STEP : GPIO_STEP_DIR);
+	if(motor_state == FORWARDS)
+	{
+		GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
+	}
+	else
+	{
+		GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_DIR_MASK));
+	}
 }
 
 void opcode_goto(signed int step_num, unsigned short step_rate, char motor_id)
@@ -149,7 +213,14 @@ void opcode_goto(signed int step_num, unsigned short step_rate, char motor_id)
 	} else {
 		command_done = 0;
 	}
-	eio_low(motor_state == FORWARDS ? GPIO_STEP : GPIO_STEP_DIR);
+	if(motor_state == FORWARDS)
+	{
+		GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
+	}
+	else
+	{
+		GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_DIR_MASK));
+	}
 }
 
 void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
@@ -163,8 +234,7 @@ void opcode_stop(signed int wait_time, unsigned short precision, char motor_id)
 	} else {
 		command_done = 0;
 	}
-	eio_low(GPIO_STEP);
-	eio_low(GPIO_STEP_DIR);
+	GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & GPIO_STOP_MASK);
 }
 
 void ICACHE_FLASH_ATTR set_duty_cycle (unsigned short step_rate)
