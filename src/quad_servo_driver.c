@@ -24,8 +24,9 @@
 #define GPIO_ALL_MASK 0x7010
 
 #define PAUSED_HIGH_TICKS 501
-#define SERVO_TICKS_FLOOR 70
-#define SERVO_TICKS_CEILING 250
+#define SERVO_TICKS_FLOOR 150
+#define SERVO_TICKS_CEILING 500
+#define SERVO_TICKS_DEFAULT 340
 
 #define MINIMUM_DUTY_CYCLE_US 1000
 #define MAXIMUM_DUTY_CYCLE_US 2000
@@ -38,10 +39,10 @@
 #define SECOND_LENGTH_TICKS 1000000 / RESOLUTION_US
 
 static volatile int ticks = 0;
-static volatile int high_ticks[4] = {[0 ... 3] = 170};
+static volatile int high_ticks[4] = {[0 ... 3] = SERVO_TICKS_DEFAULT};
 static volatile enum motor_direction motor_state[4] = {[0 ... 3] = PAUSED};
-static volatile int next_high_ticks[4] = {[0 ... 3] = 170};
-static volatile int goal_high_ticks[4] = {[0 ... 3] = 170};
+static volatile int next_high_ticks[4] = {[0 ... 3] = SERVO_TICKS_DEFAULT};
+static volatile int goal_high_ticks[4] = {[0 ... 3] = SERVO_TICKS_DEFAULT};
 static volatile float rate_counter[4] = {[0 ... 3] = 0.0}; 
 static volatile float rate_incrementor[4] = {[0 ... 3] = 2};
 static const float step_threshold = 1;

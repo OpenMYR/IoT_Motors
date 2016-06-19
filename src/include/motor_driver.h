@@ -5,7 +5,7 @@
 #include "c_types.h"
 #include "user_interface.h"
 
-#define RESOLUTION_US 10
+#define RESOLUTION_US 5
 
 #define CLOCKWISE_PINOUT 1
 #define COUNTERCLOCKWISE_PINOUT -1
