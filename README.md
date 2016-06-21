@@ -2,6 +2,8 @@ IoT Motor Firmware
 ==================
 by OpenMYR
 
+[OpenMYR Homepage](http://www.OpenMYR.com/)
+
 Software by Brandon Brown and Kyle Berezin
 
 Hardware design by Chris Adams
