@@ -16,7 +16,7 @@ This repository is the source code for firmware designed to drive various MYR mo
 	
 Reconfiguration of the WiFi mode and softAP login is supported via the built-in web server.
 
-The WiFi handler contains [demonstration code by Tom Trebisky](http://cholla.mmto.org/esp8266/OLD/sdk/wifi.html), his blog was a great boon for us when we first dove into coding for the esp.
+The WiFi handler contains [demonstration code by Tom Trebisky](http://cholla.mmto.org/esp8266/sdk/examples/wifi.html), his blog was a great boon for us when we first dove into coding for the esp.
 
 The hardware timer driver (hw_timer.c) is primarily code by Espressif Systems, located in the driver_lib folder of the examples in the ESP8266 IoT SDK. Used without permission.
 
