@@ -67,7 +67,7 @@ void init_motor_gpio()
 void step_driver ( void )
 {
 	ticks++;
-	if(ticks <= SERVO_TICKS_CEILING)
+	if(ticks <= (maximum_ticks + 1))
 	{
 		unsigned int gpio_output = ((ticks > high_ticks[0]) * gpio_output_mask[0]) +
 								((ticks > high_ticks[1]) * gpio_output_mask[1]) +
