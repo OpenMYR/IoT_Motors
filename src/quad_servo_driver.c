@@ -69,30 +69,67 @@ void step_driver ( void )
 	ticks++;
 	if(ticks <= SERVO_TICKS_CEILING)
 	{
-		int n = 0;
-		unsigned int gpio_output = 0;
-		for(n; n < 4; n++)
-		{
-			gpio_output += (ticks <= high_ticks[n]) * gpio_output_mask[n];
-		}
-		GPIO_MASK_WRITE(gpio_output);
+		unsigned int gpio_output = ((ticks > high_ticks[0]) * gpio_output_mask[0]) +
+								((ticks > high_ticks[1]) * gpio_output_mask[1]) +
+								((ticks > high_ticks[2]) * gpio_output_mask[2]) +
+								((ticks > high_ticks[3]) * gpio_output_mask[3]);
+		GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, gpio_output);
 	}
 	else if(ticks == PULSE_LENGTH_TICKS)
 	{
 		ticks = 0;
-		int current_motor = 0;
-		GPIO_MASK_WRITE(GPIO_ALL_MASK);
-		for(current_motor; current_motor < 4; current_motor++)
+		GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, GPIO_ALL_MASK);
+		os_memcpy(high_ticks, next_high_ticks, 16);
+
+		if(!command_done[0])
 		{
-			high_ticks[current_motor] = next_high_ticks[current_motor];
-			if(high_ticks[current_motor] != goal_high_ticks[current_motor])
+			if(high_ticks[0] != goal_high_ticks[0])
 			{
-				system_os_post(MOTOR_DRIVER_TASK_PRIO, current_motor, 0);
+				system_os_post(MOTOR_DRIVER_TASK_PRIO, 0, 0);
 			}
-			else if(!command_done[current_motor])
+			else
 			{
-				system_os_post(ACK_TASK_PRIO, current_motor, 0);
-				command_done[current_motor] = 1;
+				system_os_post(ACK_TASK_PRIO, 0, 0);
+				command_done[0] = 1;
+			}
+		}
+
+		if(!command_done[1])
+		{
+			if(high_ticks[1] != goal_high_ticks[1])
+			{
+				system_os_post(MOTOR_DRIVER_TASK_PRIO, 1, 0);
+			}
+			else
+			{
+				system_os_post(ACK_TASK_PRIO, 1, 0);
+				command_done[1] = 1;
+			}
+		}
+
+		if(!command_done[2])
+		{
+			if(high_ticks[2] != goal_high_ticks[2])
+			{
+				system_os_post(MOTOR_DRIVER_TASK_PRIO, 2, 0);
+			}
+			else
+			{
+				system_os_post(ACK_TASK_PRIO, 2, 0);
+				command_done[2] = 1;
+			}
+		}
+
+		if(!command_done[3])
+		{
+			if(high_ticks[3] != goal_high_ticks[3])
+			{
+				system_os_post(MOTOR_DRIVER_TASK_PRIO, 3, 0);
+			}
+			else
+			{
+				system_os_post(ACK_TASK_PRIO, 3, 0);
+				command_done[3] = 1;
 			}
 		}
 	}

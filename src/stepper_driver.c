@@ -65,7 +65,8 @@ void step_driver ( void )
 			if(step_pool <= 0)
 			{
 				motor_state = IDLE;
-				GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
+				GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, GPIO_STEP_MASK);
+				//GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
 				system_os_post(ACK_TASK_PRIO, 0, 0);
 			}
 			else if(motor_dir == PAUSED)
@@ -78,12 +79,14 @@ void step_driver ( void )
 				//stepping logic
 				if(GPIO_REG_READ(GPIO_OUT_ADDRESS) & GPIO_STEP_MASK)
 				{
-					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
+					GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, GPIO_STEP_MASK);
+					//GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_MASK));
 				}
 				else if(rate_counter >= step_threshold)
 				{
 					rate_counter -= step_threshold;
-					GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) | GPIO_STEP_MASK);
+					GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, GPIO_STEP_MASK);
+					//GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) | GPIO_STEP_MASK);
 					step_pool--;
 					stepper_position += motor_dir;
 				}
@@ -92,11 +95,13 @@ void step_driver ( void )
 		case DIRECTION_ASSERT:
 			if(motor_dir == FORWARDS)
 			{
-				GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) | GPIO_STEP_DIR_MASK);
+				//GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) | GPIO_STEP_DIR_MASK);
+				GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, GPIO_STEP_DIR_MASK);
 			}
 			else
 			{
-				GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_DIR_MASK));
+				//GPIO_MASK_WRITE(GPIO_REG_READ(GPIO_OUT_ADDRESS) & (~GPIO_STEP_DIR_MASK));
+				GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, GPIO_STEP_DIR_MASK);
 			}
 			motor_state = STEPPING;
 		case IDLE:
