@@ -1,0 +1,13 @@
+
+import os
+base_env = Environment(
+	ENV = {'PATH' : os.environ['PATH']},
+	CC = 'xtensa-lx106-elf-gcc', 
+	CPPPATH = ['.', './include'],
+	CCFLAGS = '-mlongcalls',
+	LINKFLAGS = '-Teagle.app.v6.ld',
+	LIBS = ['main', 'net80211', 'wpa', 'lwip', 'pp', 'phy'],
+	LINKCOM = '$LINK $LINKFLAGS $SOURCES -nostdlib -Wl,--start-group $_LIBFLAGS -Wl,--end-group -lgcc -o $TARGET')
+
+base_env.Program('stepper_driver', ['main.c', 'hw_timer.c', 'command_layer.c', 'stepper_driver.c', 'udp.c', 'tcp.c', 'wifi.c', 'op_queue.c', 'jsmn.c'])
+base_env.Command('stepper_driver-0x00000.bin', 'stepper_driver', 'esptool.py elf2image $SOURCE')
