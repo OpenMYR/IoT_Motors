@@ -1,19 +1,4 @@
-
-import os
-base_env = Environment(
-	ENV = {'PATH' : os.environ['PATH']},
-	CC = 'xtensa-lx106-elf-gcc', 
-	CPPPATH = ['.', './include'],
-	CCFLAGS = '-mlongcalls',
-	LINKFLAGS = '-Teagle.app.v6.ld',
-	LIBS = ['main', 'net80211', 'wpa', 'lwip', 'pp', 'phy'],
-	LINKCOM = '$LINK $LINKFLAGS $SOURCES -nostdlib -Wl,--start-group $_LIBFLAGS -Wl,--end-group -lgcc -o $TARGET')
+Import('base_env')
 
 base_env.Program('stepper_driver', ['main.c', 'hw_timer.c', 'command_layer.c', 'stepper_driver.c', 'udp.c', 'tcp.c', 'wifi.c', 'op_queue.c', 'jsmn.c'])
-base_env.Command(['stepper_driver-0x00000.bin', 'stepper_driver-0x40000.bin'], 'stepper_driver', 'esptool.py elf2image $SOURCE')
-
 base_env.Program('quad_servo_driver', ['main.c', 'hw_timer.c', 'command_layer.c', 'quad_servo_driver.c', 'udp.c', 'tcp.c', 'wifi.c', 'quad_op_queue.c', 'jsmn.c'])
-base_env.Command(['quad_servo_driver-0x00000.bin', 'quad_servo_driver-0x40000.bin'], 'quad_servo_driver', 'esptool.py elf2image $SOURCE')
-
-base_env.Alias('quad', 'quad_servo_driver-0x00000.bin')
-base_env.Alias('stepper', 'stepper_driver-0x00000.bin')

@@ -1,0 +1,13 @@
+Import('base_env')
+
+# This is a bit of a hack. We couldn't get variant_dir working with the way
+# SCons manages dependencies and get the firmware in the bin folder,
+# so we just hardcoded the bin folder into the commands
+base_env.Command(['bin/stepper_driver-0x00000.bin', 'bin/stepper_driver-0x40000.bin'], 'out/stepper_driver', 'esptool.py elf2image $SOURCE --output build/bin/stepper_driver-')
+base_env.Command(['bin/quad_servo_driver-0x00000.bin', 'bin/quad_servo_driver-0x40000.bin'], 'out/quad_servo_driver', 'esptool.py elf2image $SOURCE --output build/bin/quad_servo_driver-')
+
+base_env.Alias('quad', 'bin/quad_servo_driver-0x00000.bin')
+base_env.Alias('stepper', 'bin/stepper_driver-0x00000.bin')
+
+Clean('.', 'bin')
+Clean('.', 'out')
