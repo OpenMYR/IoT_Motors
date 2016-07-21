@@ -9,5 +9,10 @@ base_env.Command(['bin/quad_servo_driver-0x00000.bin', 'bin/quad_servo_driver-0x
 base_env.Alias('quad', 'bin/quad_servo_driver-0x00000.bin')
 base_env.Alias('stepper', 'bin/stepper_driver-0x00000.bin')
 
+base_env.Alias('flash-quad', base_env.Command(None, ['bin/quad_servo_driver-0x00000.bin', 'bin/quad_servo_driver-0x40000.bin'], 'esptool.py --port /dev/ttyAMA0 write_flash 0x00000 build/bin/quad_servo_driver-0x00000.bin 0x40000 build/bin/quad_servo_driver-0x40000.bin'))
+base_env.Alias('flash-stepper', base_env.Command(None, ['bin/stepper_driver-0x00000.bin', 'bin/stepper_driver-0x40000.bin'], 'esptool.py --port /dev/ttyAMA0 write_flash 0x00000 build/bin/stepper_driver-0x00000.bin 0x40000 build/bin/stepper_driver-0x40000.bin'))
+
 Clean('.', 'bin')
 Clean('.', 'out')
+
+Default('quad', 'stepper')

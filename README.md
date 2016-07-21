@@ -33,18 +33,17 @@ And many more
 
 Building and Flashing
 ---------------------
-Compiling this project requires the [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk).
+Compiling this project requires the [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk), as well as [SCons](http://scons.org).
 
-* "make flash-quad" cleans, rebuilds and reflashes the quad_servo build
-* "make flash-stepper" cleans, rebuilds and reflashes the stepper build
-* "make all" builds all versions of the firmware
-* "make stepper" builds the stepper build
-* "make quad" builds the quad_servo build
-* "make clean-stepper" cleans the stepper build
-* "make clean-quad" cleans the quad_servo build
-* "make clean" cleans all builds
+* "scons flash-quad" flashes the WiFi Hobby Servo Controller firmware, rebuilding if necessary
+* "scons flash-stepper" flashes the WiFi Stepper Motor firmware, rebuilding if necessary
+* "scons" builds both versions of the firmware
+* "scons quad" builds the WiFi Hobby Servo Controller firmware
+* "scons stepper" builds the WiFi Stepper Motor firmware
+* "scons -c" cleans all builds
+* "scons -c quad" cleans the WiFi Hobby Servo Controller build
+* "scons -c stepper" cleans the WiFi Stepper Motor build
 
-
-The "make flash" commands are intended to be used on Raspberry Pi 2, as the GPIO port can be used to communicate directly with the ESP8266 without the use of a USB device.
+The "flash-quad" and "flash-servo" commands are intended to be used on Raspberry Pi 2, as the GPIO port can be used to communicate directly with the ESP8266 without the use of a USB device.
 To use the Pi with the ESP8266, disable serial port login and serial bootup info. The ESP8266 can then be used with the /dev/ttyAMA0 port for both burning and serial communications.
 For more information, see [this guide](www.extragsm.com/blog/2014/12/03/connect-esp8266-to-raspberry-pi/).
