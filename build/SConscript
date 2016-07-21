@@ -16,3 +16,5 @@ Clean('.', 'bin')
 Clean('.', 'out')
 
 Default('quad', 'stepper')
+if GetOption("clean"):
+	Default('.')
