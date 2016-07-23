@@ -1,0 +1,3 @@
+Import('cmocka_env')
+
+cmocka_env.Object(source ='cmocka/src/cmocka.c', target = 'cmocka.o')

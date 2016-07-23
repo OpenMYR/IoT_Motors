@@ -15,6 +15,18 @@ base_env.Alias('flash-stepper', base_env.Command(None, ['bin/stepper_driver-0x00
 Clean('.', 'bin')
 Clean('.', 'out')
 
-Default('quad', 'stepper')
 if GetOption("clean"):
 	Default('.')
+
+# Link and run unit tests
+Import('test_env')
+
+test_env.stepper_queue_test_prog = test_env.Program('bin/test/stepper_queue_test', ['out/test/cmocka.o', 'out/test/stepper_op_queue.o'])
+test_env.quad_queue_test_prog = test_env.Program('bin/test/quad_queue_test', ['out/test/cmocka.o', 'out/test/quad_op_queue.o'])
+
+test_env.stepper_queue_test = test_env.Alias('stepper-queue-test', test_env.Command('bin/test/log/stepper_queue_test.log', test_env.stepper_queue_test_prog, 'build/bin/test/stepper_queue_test > $TARGET'))
+test_env.quad_queue_test = test_env.Alias('quad-queue-test', test_env.Command('bin/test/log/quad_queue_test.log', test_env.quad_queue_test_prog, 'build/bin/test/quad_queue_test > $TARGET'))
+
+test_env.run_tests = Alias('test', [test_env.stepper_queue_test, test_env.quad_queue_test])
+
+Default('test', 'quad', 'stepper')

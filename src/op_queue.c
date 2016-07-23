@@ -1,5 +1,12 @@
 #include "op_queue.h"
 #include "osapi.h"
+#ifdef TEST_MODE
+#include <stdarg.h>
+#include <stddef.h>
+#include <setjmp.h>
+#include "cmocka.h"
+#endif
+
 
 #define BUFFER_SIZE (1000 / MOTOR_COUNT)
 
@@ -47,3 +54,25 @@ int is_queue_empty(char id)
 {
 	return (queue_length[id] == 0) ? 1: 0;
 }
+
+#ifdef TEST_MODE
+
+static void test_queue_empty_on_init(void **state)
+{
+	(void) state;
+	int x = 0;
+	for(x; x < MOTOR_COUNT; x++)
+	{
+		assert_int_equal(is_queue_empty(x), 1);
+	}
+}
+
+int main(void)
+{
+	const struct CMUnitTest tests[] = {
+		cmocka_unit_test(test_queue_empty_on_init)
+	};
+	return cmocka_run_group_tests(tests, NULL, NULL);
+}
+
+#endif

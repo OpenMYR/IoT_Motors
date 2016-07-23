@@ -10,3 +10,14 @@ stepper_queue.Object(source = 'op_queue.c', target = 'stepper_op_queue.o')
 
 base_env.Program('stepper_driver', ['main.c', 'hw_timer.c', 'command_layer.c', 'stepper_driver.c', 'udp.c', 'tcp.c', 'wifi.c', 'stepper_op_queue.o', 'jsmn.c'])
 base_env.Program('quad_servo_driver', ['main.c', 'hw_timer.c', 'command_layer.c', 'quad_servo_driver.c', 'udp.c', 'tcp.c', 'wifi.c', 'quad_op_queue.o', 'jsmn.c'])
+
+# Compile unit test objects
+Import('test_env')
+
+stepper_test_queue = test_env.Clone();
+stepper_test_queue.Append(CCFLAGS = ['-DMOTOR_COUNT=1'])
+stepper_test_queue.Object(source = 'op_queue.c', target = 'test/stepper_op_queue.o')
+
+quad_test_queue = test_env.Clone();
+quad_test_queue.Append(CCFLAGS = ['-DMOTOR_COUNT=4'])
+quad_test_queue.Object(source = 'op_queue.c', target = 'test/quad_op_queue.o')

@@ -10,5 +10,23 @@ base_env = Environment(
 
 Export('base_env')
 
+cmocka_env = Environment(
+	ENV = {'PATH' : os.environ['PATH']},
+	CC = 'gcc', 
+	CPPPATH = ['./cmocka/src', './cmocka/include'],
+	CCFLAGS = '-DHAVE_SIGNAL_H')
+
+Export('cmocka_env')
+
+test_env = Environment(
+	ENV = {'PATH' : os.environ['PATH']},
+	CC = 'gcc',
+	CPPPATH = ['.', './include', './include/test/esp8266', '../../ext/cmocka/include'],
+	CCFLAGS = '-DTEST_MODE=1'
+	)
+
+Export('test_env')
+
+SConscript('ext/SConscript', variant_dir = './build/out/test', duplicate = 0)
 SConscript('src/SConscript', variant_dir = './build/out', duplicate = 0)
 SConscript('build/SConscript')

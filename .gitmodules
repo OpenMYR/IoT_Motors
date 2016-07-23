@@ -1,0 +1,3 @@
+[submodule "ext/cmocka"]
+	path = ext/cmocka
+	url = git://git.cryptomilk.org/projects/cmocka
