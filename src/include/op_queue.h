@@ -9,10 +9,10 @@ typedef struct stepper_command_data
 	uint8 ip_addr[4];
 } stepper_command_data;
 
-void store_command(struct stepper_command_packet *, uint8 *, char);
+int store_command(struct stepper_command_packet *, uint8 *, char);
 stepper_command_data* get_command(char);
 int remove_first_command(char);
-void clear_queue(char);
+int clear_queue(char);
 int is_queue_empty(char);
 
 
