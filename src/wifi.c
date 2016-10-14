@@ -6,6 +6,7 @@
  *
  */
 
+#include "eagle_soc.h"
 #include "wifi.h"
 #include "udp.h"
 #include "tcp.h"
@@ -46,9 +47,9 @@ void show_ip ( void )
 
 void wifi_event ( System_Event_t *e )
 {
+	int event = e->event;
 	if(wifi_get_opmode() != SOFTAP_MODE)
 	{
-		int event = e->event;
 		if ( event == EVENT_STAMODE_GOT_IP ) {
 			os_printf ( "Event, got IP\n" );
 			show_ip ();
@@ -56,7 +57,9 @@ void wifi_event ( System_Event_t *e )
 			tcp_setup();
 		} else if ( event == EVENT_STAMODE_CONNECTED ) {
 			os_printf ( "Event, connected\n" );
+			WRITE_PERI_REG(RTC_GPIO_OUT, 0);
 		} else if ( event == EVENT_STAMODE_DISCONNECTED ) {
+			WRITE_PERI_REG(RTC_GPIO_OUT, 1);
 			os_printf ( "Event, disconnected\n" );
 			if(num_retries <= 3)
 			{
@@ -69,6 +72,16 @@ void wifi_event ( System_Event_t *e )
 				change_opmode(BROADCAST, "", "");
 			}
 			os_printf("Reason: %d\n",wifi_station_get_connect_status());
+		} else {
+			os_printf ( "Unknown event %d !\n", event );
+		}
+	}
+	else if(wifi_get_opmode() == SOFTAP_MODE)
+	{
+		if (event == EVENT_SOFTAPMODE_STACONNECTED) {
+			WRITE_PERI_REG(RTC_GPIO_OUT, 0);
+		} else if (event == EVENT_SOFTAPMODE_STADISCONNECTED) {
+			if(wifi_softap_get_station_num() < 1) WRITE_PERI_REG(RTC_GPIO_OUT, 1);
 		} else {
 			os_printf ( "Unknown event %d !\n", event );
 		}
@@ -102,6 +115,10 @@ void change_opmode(mode_switch newmode, char *ssid, char *pass)
 
 void wifi_init()
 {
+	WRITE_PERI_REG(PAD_XPD_DCDC_CONF, (READ_PERI_REG(PAD_XPD_DCDC_CONF) & 0xffffffbc) | 0x00000001);
+	WRITE_PERI_REG(RTC_GPIO_CONF, (READ_PERI_REG(RTC_GPIO_CONF) & 0xfffffffe) | 0x00000000);
+	WRITE_PERI_REG(RTC_GPIO_OUT, 1);
+	WRITE_PERI_REG(RTC_GPIO_ENABLE, 1);
 	/*
 	wifi_station_set_auto_connect(1);
 	wifi_station_set_reconnect_policy(1); */
@@ -111,6 +128,21 @@ void wifi_init()
 		case BROADCAST:
 			wifi_softap_get_config(&apConfig);
 			apConfig.channel = 7;
+			apConfig.authmode = 0;
+			uint8 macaddr[6] = {0,0,0,0,0,0};
+			uint8 macchars[6] = {0,0,0,0,0,0};
+			int macplace = 0;
+			wifi_get_macaddr(SOFTAP_IF, macaddr);
+			for(macplace; macplace < 3; macplace++)
+			{
+				uint8 msb = (macaddr[macplace + 3] & 0xF0) >> 4;
+				uint8 lsb = macaddr[macplace +3] & 0x0F;
+				macchars[macplace+(1*macplace)] = (msb < 10) ? msb + 48 : msb + 55;
+				macchars[macplace+(1*macplace)+1] = (lsb < 10) ? lsb + 48 : lsb + 55;
+			}
+			uint8 ssid_gen[15] = {'O', 'p', 'e', 'n', 'M', 'Y', 'R', '_', macchars[0], macchars[1], macchars[2], macchars[3], macchars[4], macchars[5], 0 };
+			os_memcpy(&apConfig.ssid, ssid_gen, 32);
+			apConfig.ssid_len = os_strlen(ssid_gen);
 			apConfig.max_connection = CONCURRENT_SOFTAP_CONNECTIONS;
 			apConfig.ssid_hidden = 0;
 			wifi_softap_set_config(&apConfig);
