@@ -7,11 +7,12 @@
 #include <cstdlib>
 #include <cstring>
 #include "include/udp_srv.h"
+#include "include/command_layer.h"
 
 const char* ssid = "";
 const char* password = "";
 
-udp_srv UDP_server;
+udp_srv* UDP_server;
 
 void setup() {
       Serial.begin(115200);
@@ -73,11 +74,12 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  UDP_server.begin();
+  UDP_server = new udp_srv();
+  UDP_server->begin();
 }
 
 void loop() {
     ArduinoOTA.handle();
-    UDP_server.prompt_broadcast();
+    UDP_server->prompt_broadcast();
     delay(1000);
 }

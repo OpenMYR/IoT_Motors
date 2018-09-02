@@ -2,6 +2,7 @@
 #define UDP_SRV_H
 
 #include "ESPAsyncUDP.h"
+#define CTRL_PACKET_LEN_BYTES 11
 
 class udp_srv
 {
