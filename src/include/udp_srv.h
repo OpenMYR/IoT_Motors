@@ -1,5 +1,4 @@
-#ifndef UDP_SRV_H
-#define UDP_SRV_H
+#pragma once
 
 #include "ESPAsyncUDP.h"
 #define CTRL_PACKET_LEN_BYTES 11
@@ -16,5 +15,3 @@ class udp_srv
 
         AsyncUDP udp;
 };
-
-#endif

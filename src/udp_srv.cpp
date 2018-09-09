@@ -19,10 +19,10 @@ void udp_srv::udp_packet_callback(AsyncUDPPacket& packet)
     if(packet.length() == CTRL_PACKET_LEN_BYTES)
     {
         Serial.println("valid packet");
-        stepper_command_packet* motor_packet = new stepper_command_packet(packet.data());
-        packet.printf("%u,%c,%u,%u,%d,%u",motor_packet->motor_id,motor_packet->opcode, motor_packet->port, motor_packet->queue, motor_packet->step_num, motor_packet->step_rate);
-        Serial.printf("%u,%c,%u,%u,%d,%u\n",motor_packet->motor_id,motor_packet->opcode, motor_packet->port, motor_packet->queue, motor_packet->step_num, motor_packet->step_rate);
-        delete motor_packet;
+        stepper_command_packet motor_packet(packet.data());
+        packet.printf("%u,%c,%u,%u,%d,%u",motor_packet.motor_id,motor_packet.opcode, motor_packet.port, motor_packet.queue, motor_packet.step_num, motor_packet.step_rate);
+        Serial.printf("%u,%c,%u,%u,%d,%u\n",motor_packet.motor_id,motor_packet.opcode, motor_packet.port, motor_packet.queue, motor_packet.step_num, motor_packet.step_rate);
+        command_layer::motor_process_command(motor_packet, packet.remoteIP());
     }
 }
 

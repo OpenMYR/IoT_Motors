@@ -1,0 +1,35 @@
+#pragma once
+
+#include "motor_driver.h"
+#include <Servo.h>
+
+class quad_servo_driver : public motor_driver
+{
+    public:
+        quad_servo_driver();
+
+        void opcode_move(signed int step_num, unsigned short step_rate, uint8_t motor_id);
+        void opcode_goto(signed int step_num, unsigned short step_rate, uint8_t motor_id);
+        void opcode_stop(signed int wait_time, unsigned short precision, uint8_t motor_id);
+        int is_motor_running(char motor_id);
+        void driver_logic_task(os_event_t *events);
+        void driver();
+    
+    private:
+        void init_motor_gpio();
+        float calculate_step_incrementor(unsigned short input_step_rate);
+
+        Servo srv[4];
+
+        bool command_done[4] = {1, 1, 1, 1};
+
+        uint16_t current_location[4] = {90, 90, 90, 90};
+        uint16_t goal_location[4] = {90, 90, 90, 90};
+        uint16_t next_location[4] =  {90, 90, 90, 90};
+        uint16_t degree_pool[4] = {0, 0, 0, 0};
+
+        float rate_counter[4] = {0, 0, 0, 0};
+        float rate_incrementor[4] = {2, 2, 2, 2};
+
+        motor_direction direction[4] = {PAUSED, PAUSED, PAUSED, PAUSED};
+};

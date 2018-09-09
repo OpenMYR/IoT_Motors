@@ -3,18 +3,32 @@
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include <Servo.h>
 #include <cstdlib>
 #include <cstring>
 #include "include/udp_srv.h"
 #include "include/command_layer.h"
+#include "include/task_queue.h"
+#include "include/task_prio.h"
 
 const char* ssid = "";
 const char* password = "";
 
 udp_srv* UDP_server;
 
+void (*motor_task_ptr)(os_event_t*);
+
+extern "C"
+{
+  void motor_driver_os_task(os_event_t *event)
+  {
+    motor_task_ptr(event);
+  }
+}
+
 void setup() {
+  motor_task_ptr = &(command_layer::motor_driver_task_passthrough);
+  system_os_task(motor_driver_os_task, MOTOR_DRIVER_TASK_PRIO, task_queue::queue, TASK_QUEUE_LENGTH);
+  command_layer::init_motor_driver();
       Serial.begin(115200);
   Serial.println("Booting");
   WiFi.mode(WIFI_STA);

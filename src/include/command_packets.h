@@ -1,3 +1,5 @@
+#pragma once
+
 #include <c_types.h>
 
 struct stepper_command_packet {
@@ -6,7 +8,12 @@ struct stepper_command_packet {
     uint8_t queue;
     signed int step_num;
     unsigned short step_rate;
-    char motor_id;
+    uint8_t motor_id;
+
+    stepper_command_packet()
+    {
+
+    }
 
     stepper_command_packet(uint8_t* data)
     {
