@@ -26,7 +26,7 @@ void quad_servo_driver::opcode_move(signed int step_num, unsigned short step_rat
     //store off the opcode
     if(goal_location[motor_id] == current_location[motor_id])
     {
-        //ack
+        system_os_post(ACK_TASK_PRIO, motor_id, 0);
     }
     else
     {
@@ -45,7 +45,7 @@ void quad_servo_driver::opcode_goto(signed int step_num, unsigned short step_rat
     //store off the opcode
     if(goal_location[motor_id] == current_location[motor_id])
     {
-        //ack
+        system_os_post(ACK_TASK_PRIO, motor_id, 0);
     }
     else
     {
@@ -63,7 +63,7 @@ void quad_servo_driver::opcode_stop(signed int wait_time, unsigned short precisi
     //save opcode
     if(wait_time <= 0)
     {
-        //ack
+        system_os_post(ACK_TASK_PRIO, motor_id, 0);
     }
     else
     {
@@ -71,9 +71,9 @@ void quad_servo_driver::opcode_stop(signed int wait_time, unsigned short precisi
     }
 }
 
-int quad_servo_driver::is_motor_running(char motor_id)
+bool quad_servo_driver::is_motor_running(uint8_t motor_id)
 {
-
+    return !command_done[motor_id];
 }
 
 float quad_servo_driver::calculate_step_incrementor(unsigned short input_step_rate)
@@ -119,7 +119,7 @@ void quad_servo_driver::driver()
             }
             else
             {
-                //ack
+                system_os_post(ACK_TASK_PRIO, i, 0);
                 command_done[i] = 1;
             }
         }

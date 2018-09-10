@@ -5,6 +5,7 @@
 #include "IPAddress.h"
 #include "command_packets.h"
 #include "motor_driver.h"
+#include "op_queue.h"
 
 class command_layer
 {
@@ -27,4 +28,6 @@ class command_layer
         static motor_driver* motor;
         static Ticker motor_drv_timer;
         static void motor_drv_isr();
+
+        static op_queue command_queue;
 };

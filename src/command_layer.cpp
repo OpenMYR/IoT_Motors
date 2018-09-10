@@ -5,6 +5,7 @@ stepper_command_packet command_layer::current_command[4];
 IPAddress command_layer::current_addr[4];
 motor_driver* command_layer::motor = nullptr;
 Ticker command_layer::motor_drv_timer;
+op_queue command_layer::command_queue;
 
 command_layer::command_layer()
 {
@@ -26,9 +27,17 @@ void command_layer::motor_process_command(struct stepper_command_packet packet, 
 {
     if(packet.motor_id < 4)
     {
-        current_command[packet.motor_id] = packet;
-        current_addr[packet.motor_id] = addr;
-        issue_command(packet.motor_id);
+        if(packet.queue && (command_queue.is_queue_empty(packet.motor_id)|| motor->is_motor_running(packet.motor_id)))
+        {
+            command_queue.store_command(&packet, &addr, packet.motor_id);
+        }
+        else
+        {
+            current_command[packet.motor_id] = packet;
+            current_addr[packet.motor_id] = addr;
+            issue_command(packet.motor_id);
+            command_queue.clear_queue(packet.motor_id);
+        }
     }
 }
 
@@ -44,12 +53,19 @@ void command_layer::json_process_command(char *json_input)
 
 void command_layer::acknowledge_command(os_event_t *events)
 {
-
+    fetch_command(events->sig);
 }
 
-void command_layer::fetch_command(uint8_t)
+void command_layer::fetch_command(uint8_t motor_id)
 {
-
+    if(!command_queue.is_queue_empty(motor_id))
+    {
+        stepper_command_data* cmd = command_queue.get_command(motor_id);
+        current_command[motor_id] = cmd->packet;
+        current_addr[motor_id] = cmd->ip_addr;
+        command_queue.remove_first_command(motor_id);
+        issue_command(motor_id);
+    }
 }
 
 void command_layer::issue_command(uint8_t motor_id)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <c_types.h>
+#include "IPAddress.h"
 
 struct stepper_command_packet {
     unsigned short port;
@@ -25,6 +26,12 @@ struct stepper_command_packet {
         motor_id = data[10]; 
     }
 };
+
+typedef struct stepper_command_data
+{
+	struct stepper_command_packet packet;
+	IPAddress ip_addr;
+} stepper_command_data;
 
 struct command_response_packet {
 	char opcode;
