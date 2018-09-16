@@ -1,10 +1,11 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
+#include <FS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <cstdlib>
 #include <cstring>
+#include "ESPAsyncWebServer.h"
 #include "include/udp_srv.h"
 #include "include/command_layer.h"
 #include "include/task_queue.h"
@@ -12,6 +13,8 @@
 
 const char* ssid = "";
 const char* password = "";
+
+AsyncWebServer websrv(80);
 
 udp_srv* UDP_server;
 
@@ -90,6 +93,23 @@ void setup() {
   Serial.println("Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+   if (!SPIFFS.begin())
+  {
+    // Serious problem
+    Serial.println("SPIFFS Mount failed");
+  } else {
+    Serial.println("SPIFFS Mount successful");
+    File f = SPIFFS.open("/test.txt", "r");
+    Serial.printf(f.readString().c_str());
+    f.close();
+  }
+
+  websrv.serveStatic("/", SPIFFS, "/web/");
+  websrv.serveStatic("/", SPIFFS, "/web/").setDefaultFile("index.html");
+  websrv.begin();
+
+  Serial.println("HTTP server active");
 
   UDP_server = new udp_srv();
   UDP_server->begin();
