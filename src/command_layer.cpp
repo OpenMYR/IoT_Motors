@@ -1,6 +1,10 @@
 #include "include/command_layer.h"
 #include "include/quad_servo_driver.h"
+#include <string>
 
+#define JSON_TOKEN_AMOUNT 83
+
+jsmn_parser command_layer::json_parser;
 stepper_command_packet command_layer::current_command[4];
 IPAddress command_layer::current_addr[4];
 motor_driver* command_layer::motor = nullptr;
@@ -46,9 +50,159 @@ void command_layer::wifi_process_command(struct wifi_command_packet packet, IPAd
 
 }
 
-void command_layer::json_process_command(char *json_input)
+void command_layer::json_process_command(const char *json_input)
 {
-
+    jsmn_init(&json_parser);
+	jsmntok_t tokens[JSON_TOKEN_AMOUNT];
+	int len = jsmn_parse(&json_parser, json_input, os_strlen(json_input), tokens, JSON_TOKEN_AMOUNT);
+	if(len < 0)
+	{
+		Serial.printf("JSON Parsing error code %d\n", len);
+		return;
+	}
+	int place = 0;
+	while(place < len)
+	{
+		Serial.printf("JSON token %d, %d\n", place, tokens[place].type);
+		switch(tokens[place].type)
+		{
+			case JSMN_STRING:
+				if(strncmp("code", json_input + tokens[place].start, tokens[place].end - tokens[place].start) == 0)
+				{
+					Serial.printf("opcode\n");
+					char json_opcode = *(json_input + tokens[place+1].start);
+					uint8 dummy_ip[4];
+					switch(json_opcode)
+					{
+						case 'C':
+						case 'D':
+						{
+							//struct wifi_command_packet parsed_wifi_command;
+							//parsed_wifi_command.opcode = json_opcode;
+							//int token_len = tokens[place+4].end - tokens[place+4].start;
+							//os_strncpy(parsed_wifi_command.ssid, json_input + tokens[place+4].start, token_len);
+							//parsed_wifi_command.ssid[token_len] = 0;
+							//token_len = tokens[place+5].end - tokens[place+5].start;
+							//os_strncpy(parsed_wifi_command.password, json_input + tokens[place+5].start, token_len);
+							//parsed_wifi_command.password[token_len] = 0;
+							//wifi_process_command(parsed_wifi_command, dummy_ip);
+							//place += 6;
+							break;
+						}
+						case 'M':
+						case 'S':
+						case 'G':
+						{
+							Serial.printf("M, S or G\n");
+							struct stepper_command_packet parsed_motor_command;
+							parsed_motor_command.port = 0;
+							parsed_motor_command.opcode = json_opcode;
+							parsed_motor_command.motor_id = 0;
+							parsed_motor_command.queue = (*(json_input + tokens[place+4].start) == '1') ? 0x01 : 0x00;
+							signed int steps = 0;
+							int place_tracker = 0;
+							int negative = 0;
+							if(*(json_input + tokens[place+5].start) == '-')
+							{
+								negative = 1;
+								place_tracker++;
+							}
+							for(place_tracker; place_tracker < (tokens[place+5].end - tokens[place+5].start); place_tracker++)
+							{
+								steps *= 10;
+								steps += *(json_input + tokens[place+5].start + place_tracker) - 48;
+							}
+							steps = (negative == 1) ? ((-1) * steps) : steps;
+							parsed_motor_command.step_num = steps;
+							unsigned short rate = 0;
+							place_tracker = 0;
+							for(place_tracker; place_tracker < (tokens[place+6].end - tokens[place+6].start); place_tracker++)
+							{
+								rate *= 10;
+								rate += *(json_input + tokens[place+6].start + place_tracker) - 48;
+							}
+							parsed_motor_command.step_rate = rate;
+							motor_process_command(parsed_motor_command, dummy_ip);
+							place +=7;
+							break;
+						}
+						case 'R':
+							//steps per degree
+						{
+							break;
+						}
+						case 'U':
+						{
+							Serial.printf("U\n");
+							struct stepper_command_packet parsed_motor_command;
+							parsed_motor_command.port = 0;
+							parsed_motor_command.opcode = json_opcode;
+							parsed_motor_command.motor_id = 0;
+							parsed_motor_command.queue = (*(json_input + tokens[place+4].start) == '1') ? 0x01 : 0x00;
+							parsed_motor_command.step_num = 0;
+							unsigned short ustep_setting = *(json_input + tokens[place+5].start) - 48;
+							parsed_motor_command.step_rate = ustep_setting;
+							motor_process_command(parsed_motor_command, dummy_ip);
+							place += 6;
+							break;
+						}
+						case 'B':
+							//servo bounds
+						{
+							//Serial.printf("B\n");
+							//struct stepper_command_packet stop_packet;
+							//stop_packet.queue = 0;
+							//stop_packet.opcode = 'S';
+							//stop_packet.port = 0;
+							//stop_packet.step_num = 0;
+							//stop_packet.step_rate = 0;
+							//stop_packet.motor_id = 0;
+							//current_command[0] = stop_packet;
+							//current_addr[0][0] = IPAddress();
+							//issue_command(0);
+							//command_queue.clear_queue(0);
+							//int place_tracker = 0;
+							//int bound = 0;
+							//for(place_tracker; place_tracker < (tokens[place+4].end - tokens[place+4].start); place_tracker++)
+							//{
+							//	bound *= 10;
+							//	bound += *(json_input + tokens[place+4].start + place_tracker) - 48;
+							//}
+							//motor->change_motor_setting(MIN_SERVO_BOUND, bound);
+							//Serial.printf("Min: %d\n", bound);
+							//bound = 0;
+							//place_tracker = 0;
+							//for(place_tracker; place_tracker < (tokens[place+5].end - tokens[place+5].start); place_tracker++)
+							//{
+							//	bound *= 10;
+							//	bound += *(json_input + tokens[place+5].start + place_tracker) - 48;
+							//}
+							//motor->change_motor_setting(MAX_SERVO_BOUND, bound);
+							//Serial.printf("Max: %d\n", bound);
+							//place += 6;
+							break;
+						}
+						default:
+							Serial.printf("Opcode %c not found!\n", json_opcode);
+							return;
+							break;
+					}
+					break;
+				}
+                place++;
+                break;
+			case JSMN_OBJECT:
+			case JSMN_ARRAY:
+				Serial.printf("JSON Object or Array %d\n", place);
+				place++;
+				break;
+			case JSMN_PRIMITIVE:
+			case JSMN_UNDEFINED:
+				Serial.printf("Malformed JSON query!\n");
+				return;
+				break;
+		}
+	}
 }
 
 void command_layer::acknowledge_command(os_event_t *events)

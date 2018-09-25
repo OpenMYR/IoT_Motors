@@ -5,6 +5,10 @@
     },
     "files.associations": {
         "functional": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "initializer_list": "cpp"
     }
 }

@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 #include <FS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
@@ -15,6 +16,7 @@ const char* ssid = "";
 const char* password = "";
 
 AsyncWebServer websrv(80);
+void handlePost(AsyncWebServerRequest* req);
 
 udp_srv* UDP_server;
 
@@ -94,6 +96,8 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
+  MDNS.begin("openmyr");
+
    if (!SPIFFS.begin())
   {
     // Serious problem
@@ -107,6 +111,7 @@ void setup() {
 
   websrv.serveStatic("/", SPIFFS, "/web/");
   websrv.serveStatic("/", SPIFFS, "/web/").setDefaultFile("index.html");
+  websrv.on("/", HTTP_POST, handlePost);
   websrv.begin();
 
   Serial.println("HTTP server active");
@@ -119,4 +124,15 @@ void loop() {
     ArduinoOTA.handle();
     UDP_server->prompt_broadcast();
     delay(1000);
+}
+
+void handlePost(AsyncWebServerRequest* req)
+{
+  Serial.println("POST DETECTED");
+  Serial.printf("%d params\n", req->params());
+  for(int i = 0; i < req->params(); i++)
+  {
+    command_layer::json_process_command(req->getParam(i)->value().c_str());
+  }
+  req->send(202);
 }

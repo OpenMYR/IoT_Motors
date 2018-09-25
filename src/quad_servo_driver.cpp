@@ -9,10 +9,10 @@ quad_servo_driver::quad_servo_driver() : motor_driver()
 
 void quad_servo_driver::init_motor_gpio()
 {
-    srv[1].attach(4);
-    srv[2].attach(14);
-    srv[3].attach(12);
-    srv[4].attach(13);
+    srv[0].attach(4);
+    srv[1].attach(14);
+    srv[2].attach(12);
+    srv[3].attach(13);
 }
 
 void quad_servo_driver::opcode_move(signed int step_num, unsigned short step_rate, uint8_t motor_id)
