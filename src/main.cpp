@@ -36,9 +36,9 @@ void setup() {
   ack_task_ptr = &(command_layer::acknowledge_command);
   system_os_task(motor_driver_os_task, MOTOR_DRIVER_TASK_PRIO, task_queue::queue, TASK_QUEUE_LENGTH);
   system_os_task(ack_task_ptr, ACK_TASK_PRIO, task_queue::queue, TASK_QUEUE_LENGTH);
-  command_layer::init_motor_driver();
       Serial.begin(115200);
   Serial.println("Booting");
+  command_layer::init_motor_driver();
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {

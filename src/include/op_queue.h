@@ -3,7 +3,11 @@
 
 #include "command_packets.h"
 
+#if MOTOR_TYPE == 0
 #define MOTOR_COUNT 4
+#else
+#define MOTOR_COUNT 1
+#endif
 #define BUFFER_SIZE (1000 / MOTOR_COUNT)
 
 class op_queue
@@ -15,6 +19,10 @@ class op_queue
         int remove_first_command(uint8_t);
         void clear_queue(uint8_t);
         bool is_queue_empty(uint8_t);
+        unsigned short get_length(uint8_t motor_id)
+        {
+            return queue_length[motor_id];
+        }
 
     private:
         struct stepper_command_data command_queue[MOTOR_COUNT][BUFFER_SIZE];

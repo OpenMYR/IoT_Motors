@@ -1,5 +1,8 @@
 #include "include/command_layer.h"
+
 #include "include/quad_servo_driver.h"
+#include "include/stepper_driver.h"
+
 #include <string>
 
 #define JSON_TOKEN_AMOUNT 83
@@ -18,8 +21,15 @@ command_layer::command_layer()
 
 void command_layer::init_motor_driver()
 {
-    motor = new quad_servo_driver();
-    motor_drv_timer.attach_ms(20,command_layer::motor_drv_isr);
+	if(MOTOR_TYPE == 0)
+	{
+    	motor = new quad_servo_driver();
+    	motor_drv_timer.attach_ms(20,command_layer::motor_drv_isr);
+	}
+	else
+	{
+		motor = new stepper_driver();
+	}
 }
 
 void command_layer::motor_driver_task_passthrough(os_event_t *events)
@@ -29,9 +39,9 @@ void command_layer::motor_driver_task_passthrough(os_event_t *events)
 
 void command_layer::motor_process_command(struct stepper_command_packet packet, IPAddress addr)
 {
-    if(packet.motor_id < 4)
+    if(packet.motor_id < (MOTOR_TYPE == 0 ? 4 : 1))
     {
-        if(packet.queue && (command_queue.is_queue_empty(packet.motor_id)|| motor->is_motor_running(packet.motor_id)))
+        if(packet.queue && (!command_queue.is_queue_empty(packet.motor_id) || motor->is_motor_running(packet.motor_id)))
         {
             command_queue.store_command(&packet, &addr, packet.motor_id);
         }
@@ -63,13 +73,13 @@ void command_layer::json_process_command(const char *json_input)
 	int place = 0;
 	while(place < len)
 	{
-		Serial.printf("JSON token %d, %d\n", place, tokens[place].type);
+		//Serial.printf("JSON token %d, %d\n", place, tokens[place].type);
 		switch(tokens[place].type)
 		{
 			case JSMN_STRING:
 				if(strncmp("code", json_input + tokens[place].start, tokens[place].end - tokens[place].start) == 0)
 				{
-					Serial.printf("opcode\n");
+					//Serial.printf("opcode\n");
 					char json_opcode = *(json_input + tokens[place+1].start);
 					uint8 dummy_ip[4];
 					switch(json_opcode)
@@ -93,7 +103,7 @@ void command_layer::json_process_command(const char *json_input)
 						case 'S':
 						case 'G':
 						{
-							Serial.printf("M, S or G\n");
+							//Serial.printf("M, S or G\n");
 							struct stepper_command_packet parsed_motor_command;
 							parsed_motor_command.port = 0;
 							parsed_motor_command.opcode = json_opcode;
@@ -122,6 +132,7 @@ void command_layer::json_process_command(const char *json_input)
 								rate += *(json_input + tokens[place+6].start + place_tracker) - 48;
 							}
 							parsed_motor_command.step_rate = rate;
+							//Serial.printf("%c %d %d\n", parsed_motor_command.opcode, parsed_motor_command.step_num, parsed_motor_command.step_rate);
 							motor_process_command(parsed_motor_command, dummy_ip);
 							place +=7;
 							break;
@@ -193,7 +204,7 @@ void command_layer::json_process_command(const char *json_input)
                 break;
 			case JSMN_OBJECT:
 			case JSMN_ARRAY:
-				Serial.printf("JSON Object or Array %d\n", place);
+				//Serial.printf("JSON Object or Array %d\n", place);
 				place++;
 				break;
 			case JSMN_PRIMITIVE:
@@ -207,7 +218,10 @@ void command_layer::json_process_command(const char *json_input)
 
 void command_layer::acknowledge_command(os_event_t *events)
 {
-    fetch_command(events->sig);
+	if(!motor->is_motor_running(events->sig))
+	{
+    	fetch_command(events->sig);
+	}
 }
 
 void command_layer::fetch_command(uint8_t motor_id)
