@@ -252,20 +252,20 @@ void command_layer::issue_command(uint8_t motor_id)
     }
     else if(current_command[motor_id].opcode == 'U')
     {
-		motor->opcode_stop(0,0,motor_id);
-		command_queue.clear_queue(motor_id);
+		if(!current_command[motor_id].queue)
+		{
+			issue_stop_packet(motor_id);
+		}
         motor->change_motor_setting(motor_driver::config_setting::MICROSTEPPING, current_command[motor_id].step_rate , 0);
     }
 	else if(current_command[motor_id].opcode == 'H')
 	{
-		motor->opcode_stop(0,0,motor_id);
-		command_queue.clear_queue(motor_id);
+		issue_stop_packet(motor_id);
 		motor->change_motor_setting(motor_driver::config_setting::MAX_SERVO_BOUND, current_command[motor_id].step_rate, motor_id);
 	}
 	else if(current_command[motor_id].opcode == 'L')
 	{
-		motor->opcode_stop(0,0,motor_id);
-		command_queue.clear_queue(motor_id);
+		issue_stop_packet(motor_id);
 		motor->change_motor_setting(motor_driver::config_setting::MIN_SERVO_BOUND, current_command[motor_id].step_rate, motor_id);
 	}
 }
@@ -273,4 +273,19 @@ void command_layer::issue_command(uint8_t motor_id)
 void command_layer::motor_drv_isr()
 {
     motor->driver();
+}
+
+void command_layer::issue_stop_packet(uint8_t motor_id)
+{
+	struct stepper_command_packet stop_packet;
+	stop_packet.queue = 0;
+	stop_packet.opcode = 'S';
+	stop_packet.port = 0;
+	stop_packet.step_num = 0;
+	stop_packet.step_rate = 0;
+	stop_packet.motor_id = 0;
+	current_command[0] = stop_packet;
+	current_addr[0][0] = IPAddress();
+	issue_command(0);
+	command_queue.clear_queue(0);
 }

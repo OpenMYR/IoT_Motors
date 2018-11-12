@@ -23,6 +23,8 @@ class command_layer
         static void fetch_command(uint8_t);
         static void issue_command(uint8_t);
 
+        static void issue_stop_packet(uint8_t motor_id);
+
         static stepper_command_packet current_command[4];
         static IPAddress current_addr[4];
 
