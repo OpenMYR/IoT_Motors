@@ -13,6 +13,7 @@ class stepper_driver : public motor_driver
         bool is_motor_running(uint8_t motor_id);
         void driver_logic_task(os_event_t *events);
         void driver();
+        void change_motor_setting(config_setting setting, uint32_t data1, uint32_t data2);
     
     private:
         void init_motor_gpio();

@@ -1,5 +1,5 @@
 #include "include/command_layer.h"
-
+#include "Arduino.h"
 #include "include/quad_servo_driver.h"
 #include "include/stepper_driver.h"
 
@@ -252,9 +252,22 @@ void command_layer::issue_command(uint8_t motor_id)
     }
     else if(current_command[motor_id].opcode == 'U')
     {
-        //motor->change_motor_setting microstepping
+		motor->opcode_stop(0,0,motor_id);
+		command_queue.clear_queue(motor_id);
+        motor->change_motor_setting(motor_driver::config_setting::MICROSTEPPING, current_command[motor_id].step_rate , 0);
     }
-    //TODO: change motor setting min and max degree
+	else if(current_command[motor_id].opcode == 'H')
+	{
+		motor->opcode_stop(0,0,motor_id);
+		command_queue.clear_queue(motor_id);
+		motor->change_motor_setting(motor_driver::config_setting::MAX_SERVO_BOUND, current_command[motor_id].step_rate, motor_id);
+	}
+	else if(current_command[motor_id].opcode == 'L')
+	{
+		motor->opcode_stop(0,0,motor_id);
+		command_queue.clear_queue(motor_id);
+		motor->change_motor_setting(motor_driver::config_setting::MIN_SERVO_BOUND, current_command[motor_id].step_rate, motor_id);
+	}
 }
 
 void command_layer::motor_drv_isr()

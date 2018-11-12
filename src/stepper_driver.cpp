@@ -152,3 +152,10 @@ float stepper_driver::calculate_step_incrementor(unsigned short input_step_rate)
     return 0;
 }
 
+void stepper_driver::change_motor_setting(config_setting setting, uint32_t data1, uint32_t data2)
+{
+  if(setting == config_setting::MICROSTEPPING)
+  {
+    digitalWrite(GPIO_USTEP_A, data1 > 0);
+  }
+}

@@ -14,12 +14,21 @@ class quad_servo_driver : public motor_driver
         bool is_motor_running(uint8_t motor_id);
         void driver_logic_task(os_event_t *events);
         void driver();
+        void change_motor_setting(config_setting setting, uint32_t data1, uint32_t data2);
     
     private:
         void init_motor_gpio();
         float calculate_step_incrementor(unsigned short input_step_rate);
 
         Servo srv[4];
+
+        struct servo_conf
+        {
+            uint32_t min = 0;
+            uint32_t max = 180;
+        };
+
+        servo_conf confs[4];
 
         bool command_done[4] = {1, 1, 1, 1};
 

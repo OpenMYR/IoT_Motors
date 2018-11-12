@@ -18,7 +18,7 @@ void quad_servo_driver::init_motor_gpio()
 void quad_servo_driver::opcode_move(signed int step_num, unsigned short step_rate, uint8_t motor_id)
 {
     int16_t adj_location = current_location[motor_id] + step_num;
-    goal_location[motor_id] = (adj_location > 180) ? 180 : (adj_location < 0 ? 0 : adj_location);
+    goal_location[motor_id] = (adj_location > confs[motor_id].max) ? confs[motor_id].max : (adj_location < confs[motor_id].min ? confs[motor_id].min : adj_location);
     rate_counter[motor_id] = 0;
     rate_incrementor[motor_id] = calculate_step_incrementor(step_rate);
     direction[motor_id] = goal_location[motor_id] >= current_location[motor_id] ? FORWARDS : BACKWARDS;
@@ -37,7 +37,7 @@ void quad_servo_driver::opcode_move(signed int step_num, unsigned short step_rat
 void quad_servo_driver::opcode_goto(signed int step_num, unsigned short step_rate, uint8_t motor_id)
 {
     //if new location is in range, set the goal, oterwise preserve current goal
-    goal_location[motor_id] = ((step_num <= 180) && (step_num >= 0)) ? step_num : goal_location[motor_id];
+    goal_location[motor_id] = ((step_num <= confs[motor_id].max) && (step_num >= confs[motor_id].min)) ? step_num : goal_location[motor_id];
     rate_counter[motor_id] = 0;
     rate_incrementor[motor_id] = calculate_step_incrementor(step_rate);
     direction[motor_id] = goal_location[motor_id] >= current_location[motor_id] ? FORWARDS : BACKWARDS;
@@ -122,6 +122,21 @@ void quad_servo_driver::driver()
                 system_os_post(ACK_TASK_PRIO, i, 0);
                 command_done[i] = 1;
             }
+        }
+    }
+}
+
+void quad_servo_driver::change_motor_setting(config_setting setting, uint32_t data1, uint32_t data2)
+{
+    if(data2 < 4)
+    {
+        if(setting == MAX_SERVO_BOUND)
+        {
+            confs[data2].max = data1;
+        }
+        else if(setting == MIN_SERVO_BOUND)
+        {
+            confs[data2].min = data1;
         }
     }
 }
