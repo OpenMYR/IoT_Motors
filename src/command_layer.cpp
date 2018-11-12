@@ -2,6 +2,7 @@
 #include "Arduino.h"
 #include "include/quad_servo_driver.h"
 #include "include/stepper_driver.h"
+#include "include/wifi.h"
 
 #include <string>
 
@@ -13,6 +14,7 @@ IPAddress command_layer::current_addr[4];
 motor_driver* command_layer::motor = nullptr;
 Ticker command_layer::motor_drv_timer;
 op_queue command_layer::command_queue;
+bool command_layer::ota_active = false;
 
 command_layer::command_layer()
 {
@@ -39,6 +41,9 @@ void command_layer::motor_driver_task_passthrough(os_event_t *events)
 
 void command_layer::motor_process_command(struct stepper_command_packet packet, IPAddress addr)
 {
+	if(ota_active)
+		return;
+
     if(packet.motor_id < (MOTOR_TYPE == 0 ? 4 : 1))
     {
         if(packet.queue && (!command_queue.is_queue_empty(packet.motor_id) || motor->is_motor_running(packet.motor_id)))
@@ -57,11 +62,24 @@ void command_layer::motor_process_command(struct stepper_command_packet packet, 
 
 void command_layer::wifi_process_command(struct wifi_command_packet packet, IPAddress addr)
 {
+	if(ota_active)
+		return;
 
+	if(packet.opcode == 'C')
+	{
+		change_opmode(true, packet.ssid, packet.password);
+	}
+	else if(packet.opcode == 'D')
+	{
+		change_opmode(false, "", "");
+	}
 }
 
 void command_layer::json_process_command(const char *json_input)
 {
+	if(ota_active)
+		return; 
+		
     jsmn_init(&json_parser);
 	jsmntok_t tokens[JSON_TOKEN_AMOUNT];
 	int len = jsmn_parse(&json_parser, json_input, os_strlen(json_input), tokens, JSON_TOKEN_AMOUNT);
@@ -87,16 +105,16 @@ void command_layer::json_process_command(const char *json_input)
 						case 'C':
 						case 'D':
 						{
-							//struct wifi_command_packet parsed_wifi_command;
-							//parsed_wifi_command.opcode = json_opcode;
-							//int token_len = tokens[place+4].end - tokens[place+4].start;
-							//os_strncpy(parsed_wifi_command.ssid, json_input + tokens[place+4].start, token_len);
-							//parsed_wifi_command.ssid[token_len] = 0;
-							//token_len = tokens[place+5].end - tokens[place+5].start;
-							//os_strncpy(parsed_wifi_command.password, json_input + tokens[place+5].start, token_len);
-							//parsed_wifi_command.password[token_len] = 0;
-							//wifi_process_command(parsed_wifi_command, dummy_ip);
-							//place += 6;
+							struct wifi_command_packet parsed_wifi_command;
+							parsed_wifi_command.opcode = json_opcode;
+							int token_len = tokens[place+4].end - tokens[place+4].start;
+							os_strncpy(parsed_wifi_command.ssid, json_input + tokens[place+4].start, token_len);
+							parsed_wifi_command.ssid[token_len] = 0;
+							token_len = tokens[place+5].end - tokens[place+5].start;
+							os_strncpy(parsed_wifi_command.password, json_input + tokens[place+5].start, token_len);
+							parsed_wifi_command.password[token_len] = 0;
+							wifi_process_command(parsed_wifi_command, dummy_ip);
+							place += 6;
 							break;
 						}
 						case 'M':
@@ -277,15 +295,30 @@ void command_layer::motor_drv_isr()
 
 void command_layer::issue_stop_packet(uint8_t motor_id)
 {
+	command_queue.clear_queue(motor_id);
 	struct stepper_command_packet stop_packet;
 	stop_packet.queue = 0;
 	stop_packet.opcode = 'S';
 	stop_packet.port = 0;
 	stop_packet.step_num = 0;
 	stop_packet.step_rate = 0;
-	stop_packet.motor_id = 0;
-	current_command[0] = stop_packet;
-	current_addr[0][0] = IPAddress();
-	issue_command(0);
-	command_queue.clear_queue(0);
+	stop_packet.motor_id = motor_id;
+	current_command[motor_id] = stop_packet;
+	current_addr[motor_id] = IPAddress();
+	issue_command(motor_id);
+}
+
+void command_layer::stop_motor()
+{
+	if(MOTOR_TYPE == 0)
+	{
+		for(uint8_t i = 0; i < 4; i++)
+			issue_stop_packet(i);
+	}
+	else
+	{
+		issue_stop_packet(0);
+	}
+	
+	ota_active = true;
 }

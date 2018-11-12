@@ -17,9 +17,11 @@ class command_layer
         static void json_process_command(const char *json_input);
         static void acknowledge_command(os_event_t *events);
         static void motor_driver_task_passthrough(os_event_t *events);
+        static void stop_motor();
 
     private:
         command_layer();
+        static bool ota_active;
         static void fetch_command(uint8_t);
         static void issue_command(uint8_t);
 

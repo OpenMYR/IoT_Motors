@@ -1,5 +1,4 @@
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 #include <FS.h>
 #include <WiFiUdp.h>
@@ -11,9 +10,7 @@
 #include "include/command_layer.h"
 #include "include/task_queue.h"
 #include "include/task_prio.h"
-
-const char* ssid = "";
-const char* password = "";
+#include "include/wifi.h"
 
 AsyncWebServer websrv(80);
 void handlePost(AsyncWebServerRequest* req);
@@ -39,13 +36,8 @@ void setup() {
       Serial.begin(115200);
   Serial.println("Booting");
   command_layer::init_motor_driver();
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
-  }
+
+  init_wifi();
 
   // Port defaults to 8266
   // ArduinoOTA.setPort(8266);
@@ -60,7 +52,11 @@ void setup() {
   // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
   // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
 
-  ArduinoOTA.onStart([]() {
+  ArduinoOTA.onStart([=]() {
+    if(UDP_server)
+      UDP_server->end();
+    websrv.reset();
+    command_layer::stop_motor();
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH) {
       type = "sketch";
