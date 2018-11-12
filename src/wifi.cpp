@@ -5,6 +5,7 @@
 static uint32_t num_retries = 0;
 
 WiFiEventHandler stationDisconnectHandler;
+WiFiEventHandler stationGotIPHandler;
 
 void wifiStationDisconnectHandler(const WiFiEventStationModeDisconnected& evt)
 {
@@ -18,6 +19,13 @@ void wifiStationDisconnectHandler(const WiFiEventStationModeDisconnected& evt)
         num_retries = 0;
         change_opmode(false, "", "");
     }
+}
+
+void wifiStationGotIPHandler(const WiFiEventStationModeGotIP& evt)
+{
+  Serial.println("Got Local IP");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
 }
 
 void change_opmode(bool station, char* ssid, char* pass)
@@ -37,6 +45,7 @@ void change_opmode(bool station, char* ssid, char* pass)
 void init_wifi()
 {
     stationDisconnectHandler = WiFi.onStationModeDisconnected(&wifiStationDisconnectHandler);
+    stationGotIPHandler = WiFi.onStationModeGotIP(&wifiStationGotIPHandler);
     switch(WiFi.getMode())
     {
         case WIFI_OFF:
