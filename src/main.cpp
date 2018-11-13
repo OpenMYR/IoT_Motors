@@ -39,19 +39,6 @@ void setup() {
 
   init_wifi();
 
-  // Port defaults to 8266
-  // ArduinoOTA.setPort(8266);
-
-  // Hostname defaults to esp8266-[ChipID]
-  // ArduinoOTA.setHostname("myesp8266");
-
-  // No authentication by default
-  // ArduinoOTA.setPassword("admin");
-
-  // Password can be set with it's md5 value as well
-  // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
-  // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
-
   ArduinoOTA.onStart([=]() {
     if(UDP_server)
       UDP_server->end();
@@ -87,7 +74,6 @@ void setup() {
       Serial.println("End Failed");
     }
   });
-  ArduinoOTA.begin();
 
   MDNS.begin("openmyr");
 
@@ -95,10 +81,14 @@ void setup() {
   {
     // Serious problem
     Serial.println("SPIFFS Mount failed");
+    ArduinoOTA.setPasswordHash("acc3a26f06f0d71c9d06380b14139aaa");
   } else {
     Serial.println("SPIFFS Mount successful");
-    File f = SPIFFS.open("/test.txt", "r");
-    Serial.printf(f.readString().c_str());
+    File f = SPIFFS.open("/ota_pass.txt", "r");
+    if(f)
+      ArduinoOTA.setPasswordHash(f.readString().c_str());
+    else
+      ArduinoOTA.setPasswordHash("acc3a26f06f0d71c9d06380b14139aaa");
     f.close();
   }
 
@@ -111,6 +101,8 @@ void setup() {
 
   UDP_server = new udp_srv();
   UDP_server->begin();
+
+  ArduinoOTA.begin();
 }
 
 void loop() {

@@ -6,7 +6,7 @@
 #include "command_packets.h"
 #include "motor_driver.h"
 #include "op_queue.h"
-#include "jsmn.h"
+#include <ArduinoJson.h>
 
 class command_layer
 {
@@ -36,5 +36,5 @@ class command_layer
 
         static op_queue command_queue;
 
-        static jsmn_parser json_parser;
+        static StaticJsonBuffer<JSON_OBJECT_SIZE(100)> jsonBuf;
 };
