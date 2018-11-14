@@ -1,2 +1,3 @@
 #define ACK_TASK_PRIO 1
 #define MOTOR_DRIVER_TASK_PRIO 2
+#define ESTOP_TASK_PRIO 3

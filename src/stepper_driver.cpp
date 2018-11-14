@@ -16,6 +16,8 @@ uint32_t direction = 0;
 uint32_t paused = 0;
 int32_t location = 0;
 uint32_t command_done = 1;
+uint32_t endstop_a = 0;
+uint32_t endstop_b = 0;
 
 extern "C"
 {
@@ -38,7 +40,45 @@ extern "C"
       paused = 0;
       digitalWrite(GPIO_STEP_ENABLE, 0);
     }
-    system_os_post(ACK_TASK_PRIO, 0, 0);
+    system_os_post(ACK_TASK_PRIO, 0, location);
+  }
+
+  ICACHE_RAM_ATTR void endstop_a_interrupt()
+  {
+      stopWaveform();
+      if(digitalRead(GPIO_IO_A) == 0)
+      {
+          endstop_a = 1;
+          command_done = 0;
+          direction = direction == 0 ? 1 : 0;
+          digitalWrite(GPIO_STEP_DIR, direction);
+          startWaveform(10, (1 / ((float)10) * 1000000) - 10, UINT32_MAX);
+      }
+      else
+      {
+          endstop_a = 0;
+          command_done = 1;
+          system_os_post(ESTOP_TASK_PRIO, 0, 0);
+      }
+  }
+
+    ICACHE_RAM_ATTR void endstop_b_interrupt()
+  {
+      stopWaveform();
+      if(digitalRead(GPIO_IO_B) == 0)
+      {
+          endstop_b = 1;
+          command_done = 0;
+          direction = direction == 0 ? 1 : 0;
+          digitalWrite(GPIO_STEP_DIR, direction);
+          startWaveform(10, (1 / ((float)10) * 1000000) - 10, UINT32_MAX);
+      }
+      else
+      {
+          endstop_b = 0;
+          command_done = 1;
+          system_os_post(ESTOP_TASK_PRIO, 0, 1);
+      }
   }
 }
 
@@ -56,6 +96,11 @@ void stepper_driver::init_motor_gpio()
     pinMode(GPIO_STEP_ENABLE, OUTPUT);
     pinMode(GPIO_STEP_DIR, OUTPUT);
     pinMode(GPIO_USTEP_A, OUTPUT);
+    pinMode(GPIO_IO_A, INPUT_PULLUP);
+    pinMode(GPIO_IO_B, INPUT_PULLUP);
+
+    attachInterrupt(GPIO_IO_A, endstop_a_interrupt, CHANGE);
+    attachInterrupt(GPIO_IO_B, endstop_b_interrupt, CHANGE);
 
     setWaveformPulseCountPin(GPIO_STEP);
 
@@ -66,6 +111,9 @@ void stepper_driver::init_motor_gpio()
 void stepper_driver::opcode_move(signed int step_num, unsigned short step_rate, uint8_t motor_id)
 {
     //Serial.printf("move %d steps at %d steps per sec", step_num, step_rate);
+    if(endstop_a || endstop_b)
+        return;
+
     stopWaveform();
     
     uint32_t limit = abs(step_num);
@@ -85,6 +133,9 @@ void stepper_driver::opcode_move(signed int step_num, unsigned short step_rate, 
 
 void stepper_driver::opcode_goto(signed int step_num, unsigned short step_rate, uint8_t motor_id)
 {
+    if(endstop_a || endstop_b)
+        return;
+        
     stopWaveform();
     //Serial.printf("goto %d %d\n", step_num, step_rate);
     
@@ -115,6 +166,9 @@ void stepper_driver::opcode_goto(signed int step_num, unsigned short step_rate, 
 
 void stepper_driver::opcode_stop(signed int wait_time, unsigned short precision, uint8_t motor_id)
 {
+    if(endstop_a || endstop_b)
+        return;
+        
     stopWaveform();
     //Serial.printf("stop %d %d\n", wait_time, precision);
     uint32_t limit = abs(wait_time);

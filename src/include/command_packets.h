@@ -35,6 +35,7 @@ typedef struct stepper_command_data
 
 struct command_response_packet {
 	char opcode;
+    int motor_id;
 	int position;
 };
 

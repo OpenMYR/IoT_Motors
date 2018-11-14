@@ -15,6 +15,7 @@ Ticker command_layer::motor_drv_timer;
 op_queue command_layer::command_queue;
 bool command_layer::ota_active = false;
 StaticJsonBuffer<JSON_OBJECT_SIZE(100)> command_layer::jsonBuf;
+std::function<void(command_response_packet&)> command_layer::ack_func;
 
 command_layer::command_layer()
 {
@@ -236,10 +237,27 @@ void command_layer::json_process_command(const char *json_input)
 
 void command_layer::acknowledge_command(os_event_t *events)
 {
+	command_response_packet ack;
+	ack.opcode = current_command[events->sig].opcode;
+	ack.motor_id = events->sig;
+	ack.position = events->par;
 	if(!motor->is_motor_running(events->sig))
 	{
     	fetch_command(events->sig);
 	}
+	if(ack_func)
+		ack_func(ack);
+}
+
+void command_layer::endstop_ack(os_event_t *events)
+{
+	command_queue.clear_queue(events->sig);
+	command_response_packet ack;
+	ack.opcode = 'E';
+	ack.motor_id = events->sig;
+	ack.position = events->par;
+	if(ack_func)
+		ack_func(ack);
 }
 
 void command_layer::fetch_command(uint8_t motor_id)
@@ -321,4 +339,9 @@ void command_layer::stop_motor()
 	}
 	
 	ota_active = true;
+}
+
+void command_layer::register_udp_ack_func(std::function<void(command_response_packet&)>f)
+{
+	ack_func = f;
 }

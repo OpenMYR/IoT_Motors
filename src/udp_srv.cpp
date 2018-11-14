@@ -8,6 +8,8 @@ udp_srv::udp_srv()
 
 void udp_srv::begin()
 {
+    std::function<void(command_response_packet&)> f = std::bind(&udp_srv::broadcast_ack, this, std::placeholders::_1);
+    command_layer::register_udp_ack_func(f);
     udp.connect(IPAddress(192,168,1,255),4140);
     udp.listen(4120);
     udp.onPacket([this](AsyncUDPPacket& packet){this->udp_packet_callback(packet);});
@@ -39,4 +41,9 @@ void udp_srv::prompt_broadcast()
 void udp_srv::end()
 {
     udp.close();
+}
+
+void udp_srv::broadcast_ack(command_response_packet& packet)
+{
+    udp.broadcastTo((uint8_t*)(&packet), sizeof(command_response_packet), 4140);
 }

@@ -2,6 +2,7 @@
 
 #include <os_type.h>
 #include <Ticker.h>
+#include <functional>
 #include "IPAddress.h"
 #include "command_packets.h"
 #include "motor_driver.h"
@@ -16,8 +17,10 @@ class command_layer
         static void wifi_process_command(struct wifi_command_packet, IPAddress);
         static void json_process_command(const char *json_input);
         static void acknowledge_command(os_event_t *events);
+        static void endstop_ack(os_event_t* events);
         static void motor_driver_task_passthrough(os_event_t *events);
         static void stop_motor();
+        static void register_udp_ack_func(std::function<void(command_response_packet&)>f);
 
     private:
         command_layer();
@@ -35,6 +38,8 @@ class command_layer
         static void motor_drv_isr();
 
         static op_queue command_queue;
+
+        static std::function<void(command_response_packet&)> ack_func;
 
         static StaticJsonBuffer<JSON_OBJECT_SIZE(100)> jsonBuf;
 };

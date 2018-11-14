@@ -19,6 +19,7 @@ udp_srv* UDP_server;
 
 void (*motor_task_ptr)(os_event_t*);
 void (*ack_task_ptr)(os_event_t*);
+void (*estop_task_ptr)(os_event_t*);
 
 extern "C"
 {
@@ -31,8 +32,10 @@ extern "C"
 void setup() {
   motor_task_ptr = &(command_layer::motor_driver_task_passthrough);
   ack_task_ptr = &(command_layer::acknowledge_command);
+  estop_task_ptr = &(command_layer::endstop_ack);
   system_os_task(motor_driver_os_task, MOTOR_DRIVER_TASK_PRIO, task_queue::queue, TASK_QUEUE_LENGTH);
   system_os_task(ack_task_ptr, ACK_TASK_PRIO, task_queue::queue, TASK_QUEUE_LENGTH);
+  system_os_task(estop_task_ptr, ESTOP_TASK_PRIO, task_queue::queue, TASK_QUEUE_LENGTH);
       Serial.begin(115200);
   Serial.println("Booting");
   command_layer::init_motor_driver();
