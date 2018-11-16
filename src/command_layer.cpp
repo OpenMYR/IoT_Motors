@@ -157,6 +157,8 @@ void command_layer::json_process_command(const char *json_input)
 							motor_process_command(parsed_motor_command, dummy_ip);
 						}break;
 						case 'U':
+						case 'H':
+						case 'L':
 						{
 							JsonArray& dataArray = cmd["data"];
 							if(dataArray.size() != 3)
@@ -168,7 +170,6 @@ void command_layer::json_process_command(const char *json_input)
 							uint32_t motor_id = dataArray[0];
 							uint32_t queue = dataArray[1];
 							uint32_t dataOne = dataArray[2];
-							uint32_t dataTwo = dataArray[3];
 
 							stepper_command_packet parsed_motor_command;
 							parsed_motor_command.port = 0;
@@ -180,10 +181,6 @@ void command_layer::json_process_command(const char *json_input)
 							uint8 dummy_ip[4];
 							motor_process_command(parsed_motor_command, dummy_ip);
 						}break;
-						case 'H':
-						case 'L':
-							Serial.println("Bounds packet");
-							break;
 						default: 
 							Serial.println("Unknown packet");
 							break;
@@ -201,38 +198,6 @@ void command_layer::json_process_command(const char *json_input)
 		Serial.println("Object not parsed!");
 	}
 	jsonBuf.clear();
-
-							//Serial.printf("B\n");
-							//struct stepper_command_packet stop_packet;
-							//stop_packet.queue = 0;
-							//stop_packet.opcode = 'S';
-							//stop_packet.port = 0;
-							//stop_packet.step_num = 0;
-							//stop_packet.step_rate = 0;
-							//stop_packet.motor_id = 0;
-							//current_command[0] = stop_packet;
-							//current_addr[0][0] = IPAddress();
-							//issue_command(0);
-							//command_queue.clear_queue(0);
-							//int place_tracker = 0;
-							//int bound = 0;
-							//for(place_tracker; place_tracker < (tokens[place+4].end - tokens[place+4].start); place_tracker++)
-							//{
-							//	bound *= 10;
-							//	bound += *(json_input + tokens[place+4].start + place_tracker) - 48;
-							//}
-							//motor->change_motor_setting(MIN_SERVO_BOUND, bound);
-							//Serial.printf("Min: %d\n", bound);
-							//bound = 0;
-							//place_tracker = 0;
-							//for(place_tracker; place_tracker < (tokens[place+5].end - tokens[place+5].start); place_tracker++)
-							//{
-							//	bound *= 10;
-							//	bound += *(json_input + tokens[place+5].start + place_tracker) - 48;
-							//}
-							//motor->change_motor_setting(MAX_SERVO_BOUND, bound);
-							//Serial.printf("Max: %d\n", bound);
-							//place += 6;
 }
 
 void command_layer::acknowledge_command(os_event_t *events)

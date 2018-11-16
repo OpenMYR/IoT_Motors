@@ -132,7 +132,7 @@ void quad_servo_driver::change_motor_setting(config_setting setting, uint32_t da
     {
         if(setting == MAX_SERVO_BOUND)
         {
-            confs[data2].max = data1;
+            confs[data2].max = std::min(data1, (uint32_t)200);
         }
         else if(setting == MIN_SERVO_BOUND)
         {
