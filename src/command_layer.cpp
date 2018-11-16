@@ -1,7 +1,10 @@
 #include "include/command_layer.h"
 #include "Arduino.h"
+#if MOTOR_TYPE == 0
 #include "include/quad_servo_driver.h"
+#else
 #include "include/stepper_driver.h"
+#endif
 #include "include/wifi.h"
 
 #include <string>
@@ -24,15 +27,12 @@ command_layer::command_layer()
 
 void command_layer::init_motor_driver()
 {
-	if(MOTOR_TYPE == 0)
-	{
+	#if MOTOR_TYPE == 0
     	motor = new quad_servo_driver();
     	motor_drv_timer.attach_ms(20,command_layer::motor_drv_isr);
-	}
-	else
-	{
+	#else
 		motor = new stepper_driver();
-	}
+	#endif
 }
 
 void command_layer::motor_driver_task_passthrough(os_event_t *events)
