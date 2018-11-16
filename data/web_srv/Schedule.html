@@ -1,0 +1,64 @@
+<html>
+<head>
+	<title>Motor Control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body height="100%">
+	<div class="flat">
+		<div class="btn-group topbar">
+			<button type="button" onclick="window.location.href='Control.html'">Control</button> 
+			<button type="button" onclick="window.location.href='Schedule.html'">Schedule</button> 
+			<img class="top-logo" src="assets/logoText.svg">
+			<button type="button" onclick="window.location.href='Config.html'">Config</button> 
+			<button type="button" onclick="window.location.href='About.html'">About</button> 
+		</div>
+	</div>
+		<div class="wrap">
+			<div class="spaced display-panel">
+				<div class="even-spaced">
+					<button id="radio0" onclick="modeSelected(0)">Move</button>
+					<button id="radio1" onclick="modeSelected(1)">Goto</button>
+					<button id="radio2" onclick="modeSelected(2)">Stop</button>
+				</div>
+				<div class="even-spaced">
+					<label id ="commandDisplay">Please select a command</label>
+				</div>
+
+				<div class="even-spaced">
+					<label class="margin">Degrees</label>
+					<input id="angleInput" value="0" type="input" onchange="crossCalculate(1)" style="width:100px;">
+				</div>
+				<div class="even-spaced">
+					<label class="margin">Degrees/Sec</label>
+					<input id="speedAngleInput" value="0" type="input" onchange="crossCalculate(3)" style="width:100px;">
+				</div>
+
+				<div class="even-spaced">
+					<label class="margin">Duration</label>
+					<input id="duration" value="0 Seconds" type="input" readonly="true" style="width:100px; background-color: #c3c3c3;">
+				</div>
+				<div class="even-spaced">
+					<input id="add" type="button" value="Add to Queue">
+				</div>
+			</div>
+			<div class="spaced table-panel">	
+				<button id="clear" class="left b2" onclick="clearQueue()">Clear Queue</button>
+				<button id="execute" class="right b2">Run Queue</button>
+				<table class="table-normal">
+					<thead>
+						<tr>
+							<td>Command</td>
+							<td>Code Amount</td>
+							<td>At Speed</td>
+						</tr>
+					</thead>
+					<tbody id="body">
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</body>
+<script src="./schedule.js"></script>
+</html>

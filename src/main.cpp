@@ -95,8 +95,8 @@ void setup() {
     f.close();
   }
 
-  websrv.serveStatic("/", SPIFFS, "/web/");
-  websrv.serveStatic("/", SPIFFS, "/web/").setDefaultFile("index.html");
+  websrv.serveStatic("/", SPIFFS, MOTOR_TYPE == 0 ? "/web_srv/" : "/web_step/");
+  websrv.serveStatic("/", SPIFFS,  MOTOR_TYPE == 0 ? "/web_srv/" : "/web_step/").setDefaultFile("index.html");
   websrv.on("/", HTTP_POST, handlePost);
   websrv.begin();
 
