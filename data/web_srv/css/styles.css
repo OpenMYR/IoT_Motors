@@ -44,6 +44,9 @@ body {
   font-family: 'Open Sans', 'Droid Sans', Arial, sans-serif;
   font-size: 12
 }
+.no-radius {
+  border-radius: 0px
+}
 .full {
   height: 100%;
   width: 100%;
@@ -51,16 +54,22 @@ body {
 .spaced {
   margin: 0px 50px;
 }
+.wide-margin {
+  margin: 0px 150px;
+}
 #center-box {
   position: relative;
   top: 50%;
   transform: translateY(-50%);
   text-align: center;
 }
-.wrapper{
+.wrapper {
   position:relative;
   width:300px;
   height:300px;
+}
+.center-text {
+  text-align: center;
 }
 
 .overlap-canvas{
@@ -80,6 +89,9 @@ body {
 }
 .left{
   float:left;
+}
+.middle{
+  float:center;
 }
 .center{
   position: relative;
@@ -172,4 +184,9 @@ body {
   margin-top: 60px;
   width: 500px;
   vertical-align: top;
+}
+
+.vertical-padding {
+  padding-top: 20px;
+  padding-bottom: 20px
 }

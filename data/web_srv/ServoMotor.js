@@ -156,7 +156,7 @@ class ServoMotor {
 				motorNum,
 				0,
 				Math.round(angle),
-				100
+				1000
 			]
 		};
 		var out = {

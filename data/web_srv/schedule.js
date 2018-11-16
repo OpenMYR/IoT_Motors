@@ -1,11 +1,18 @@
 //document references
 var table = document.getElementById("body");
 var command = document.getElementById("commandDisplay");
+var motor = document.getElementById("motorDisplay");
 var angle = document.getElementById("angleInput");
-var radioButtons = [
-	document.getElementById("radio0"),
-	document.getElementById("radio1"),
-	document.getElementById("radio2")
+var commandButtons = [
+	document.getElementById("cr0"),
+	document.getElementById("cr1"),
+	document.getElementById("cr2")
+];
+var motorButtons = [
+	document.getElementById("mr0"),
+	document.getElementById("mr1"),
+	document.getElementById("mr2"),
+	document.getElementById("mr3")
 ];
 var floatInputs = [
 	document.getElementById("angleInput"),
@@ -19,6 +26,7 @@ var buttonCommands = ["Move", "Goto", "Stop"];
 var buttonCommandDisplays = ["Move a relative distance.", "Goto an absolute position.", "Stop and dwell for some time."];
 //variables
 var selectedButton = -1;
+var selectedMotor = -1;
 var moreDataWaiting = false;
 var stopCountsPerSecond = 1000;
 var dataParts = [];
@@ -54,9 +62,9 @@ document.getElementById("add").addEventListener("click", function(){
 		var stepInputValue = parseInt(floatInputs[0].value);
 		var stepRateInputValue = parseFloat(floatInputs[1].value);
 		if(selectedButton == 2){
-			addStop(queueFlag, parseFloat(duration.value));
+			addStop(selectedMotor, queueFlag, parseFloat(duration.value));
 		} else {
-			addMove(buttonOpCode[selectedButton], queueFlag, stepInputValue, stepRateInputValue);
+			addMove(selectedMotor, buttonOpCode[selectedButton], queueFlag, stepInputValue, stepRateInputValue);
 		}
 	}
 });
@@ -65,19 +73,20 @@ document.getElementById("execute").addEventListener("click", function(){
 });
 function constructRow(args) {
 	var row = table.insertRow(table.rows.length);
-	row.insertCell().innerHTML = "<b>" + args.cells[0] + "</b>";
-	row.insertCell().innerHTML = args.cells[1];
+	row.insertCell().innerHTML = args.cells[0];
+	row.insertCell().innerHTML = "<b>" + args.cells[1] + "</b>";
 	row.insertCell().innerHTML = args.cells[2];
+	row.insertCell().innerHTML = args.cells[3];
 	return row;
 }
 function modeSelected(buttonNum){
 	selectedButton = buttonNum;
-	radioButtons[buttonNum].style.backgroundColor = "#157e15";
-	radioButtons[buttonNum].style.color = "#fff";
-	radioButtons[(buttonNum + 1) % 3].style.backgroundColor = "#ffffff00";
-	radioButtons[(buttonNum + 2) % 3].style.backgroundColor = "#ffffff00";
-	radioButtons[(buttonNum + 1) % 3].style.color = "#000";
-	radioButtons[(buttonNum + 2) % 3].style.color = "#000";
+	commandButtons[buttonNum].style.backgroundColor = "#157e15";
+	commandButtons[buttonNum].style.color = "#fff";
+	commandButtons[(buttonNum + 1) % 3].style.backgroundColor = "#ffffff00";
+	commandButtons[(buttonNum + 2) % 3].style.backgroundColor = "#ffffff00";
+	commandButtons[(buttonNum + 1) % 3].style.color = "#000";
+	commandButtons[(buttonNum + 2) % 3].style.color = "#000";
 	command.innerHTML = buttonCommandDisplays[buttonNum];
 	duration.style.backgroundColor = (buttonNum == 2)?"#fff":"#c3c3c3";
 	duration.readOnly = !(buttonNum == 2);
@@ -86,6 +95,15 @@ function modeSelected(buttonNum){
 		floatInputs[a].readOnly = (buttonNum == 2);
 	}
 }
+function motorSelected(motorNum){
+	selectedMotor = motorNum;
+	for (var n = 0; n < motorButtons.length; n++){
+		motorButtons[n].style.backgroundColor = "#ffffff00";
+		motorButtons[n].style.color = "#000";
+	}
+	motorButtons[motorNum].style.backgroundColor = "#157e15";
+	motorButtons[motorNum].style.color = "#fff";
+}
 function changedFloatInput(event){
 	//enter or -
 	if ((event.charCode == 13) || (event.charCode == 45)){
@@ -93,6 +111,10 @@ function changedFloatInput(event){
 	}
 	// "." if one is not already there
 	if (event.charCode == 46 && (event.target.value.indexOf('.') == -1)){
+		return true;
+	}
+	//delete or backspace
+	if (event.charCode == 0){
 		return true;
 	}
 	//numbers
@@ -142,6 +164,10 @@ function isValidCommand(){
 		errMessage += "Please select a command.\n";
 		isValid = false;
 	}
+	if (selectedMotor == -1) {
+		errMessage += "Please select a motor.\n";
+		isValid = false;
+	}
 	if (Math.round(parseFloat(floatInputs[1].value)) < 0) {
 		errMessage += "Speed must be positive.\n";
 		isValid = false;
@@ -155,21 +181,21 @@ function isValidCommand(){
 	}
 	return isValid;
 }
-function addStop(queueFlag,time){
+function addStop(motorid, queueFlag,time){
 	stepInputValue = Math.round(stopCountsPerSecond * time);
-	addCommand("S", queueFlag, stepInputValue, stopCountsPerSecond);
+	addCommand(motorid, "S", queueFlag, stepInputValue, stopCountsPerSecond);
 }
-function addMove(code, queueFlag, stepInputValue, stepRateInputValue){
+function addMove(motorid, code, queueFlag, stepInputValue, stepRateInputValue){
 	stepInputValue = Math.round(stepInputValue);
 	stepRateInputValue = Math.round(stepRateInputValue);
-	addCommand(code, queueFlag, stepInputValue, stepRateInputValue);
+	addCommand(motorid, code, queueFlag, stepInputValue, stepRateInputValue);
 }
-function addCommand(code, queueFlag, stepInputValue, stepRateInputValue){
-	constructRow({cells : [code, stepInputValue, stepRateInputValue]});
+function addCommand(motorid, code, queueFlag, stepInputValue, stepRateInputValue){
+	constructRow({cells : [motorid, code, stepInputValue, stepRateInputValue]});
 	var newCommand = {
 		code : code,
 		data : [
-			0,
+			motorid,
 			queueFlag,
 			stepInputValue,
 			stepRateInputValue
