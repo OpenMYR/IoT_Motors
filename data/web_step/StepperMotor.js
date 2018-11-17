@@ -1,4 +1,4 @@
-class ServoMotor {
+class StepperMotor {
 	constructor(canvas, motorArgs, virtualMotor) {
 		this.canvas = canvas;
 		this._mousedown = false;
@@ -11,9 +11,9 @@ class ServoMotor {
 		this._angleContext = canvas.angleCanvas.getContext("2d");
 		this._hornContext = canvas.hornCanvas.getContext("2d");
 
-		ServoMotor.drawMotorBase(this._motorContext, motorArgs);
-		ServoMotor.drawAngle(this._angleContext, motorArgs);
-		ServoMotor.drawHorn(this._hornContext, motorArgs);
+		StepperMotor.drawMotorBase(this._motorContext, motorArgs);
+		StepperMotor.drawAngle(this._angleContext, motorArgs);
+		StepperMotor.drawHorn(this._hornContext, motorArgs);
 
 		canvas.hornCanvas.addEventListener('mousedown', event => this._mousePressed(event), false);
 		canvas.hornCanvas.addEventListener('mousemove', event => this._mouseMoved(event), false);
@@ -25,6 +25,7 @@ class ServoMotor {
 	}
 
 	_mousePressed(event) {
+		StepperMotor.setMicroStepping(true);
 		this._mousedown = true; 
 		this._mouseMoved(event);
 	}
@@ -34,12 +35,14 @@ class ServoMotor {
   			let rect = event.target.getBoundingClientRect();
 			let dx = event.clientX - rect.left - rect.width/2;
 			let dy = event.clientY - rect.top - rect.height/2;
-			let rawAngle = (Math.PI + Math.atan2(-dx, -dy)) * 180 / Math.PI;
-			if ((rawAngle >= this.motorArgs.minAngle) && (rawAngle <= this.motorArgs.maxAngle)) {
-				this.motorArgs.angle = rawAngle;
-				this.virtualMotor.updatePosition(this.motorArgs.motorid - 1, this.motorArgs.angle);
+			let rawAngle = Math.atan2(dx, -dy) * 180 / Math.PI;
+			let delta = rawAngle - StepperMotor.mod(this.motorArgs.angle, 360);
+			if (Math.abs(delta) >= 180) {
+				delta += 360 * (-delta/Math.abs(delta));
 			}
-			ServoMotor.drawHorn(this._hornContext, this.motorArgs);
+			this.motorArgs.angle += delta;
+			this.virtualMotor.updatePosition(this.motorArgs.motorid, this.motorArgs.angle/360*200*32);
+			StepperMotor.drawHorn(this._hornContext, this.motorArgs);
 		}
 	}
 
@@ -48,6 +51,7 @@ class ServoMotor {
 	}
 
 	_touchStart(event) {
+		StepperMotor.setMicroStepping(true);
 		this._touchdown = true;
 		this._touchMoved(event);
 	}
@@ -57,12 +61,14 @@ class ServoMotor {
 			let rect = event.target.getBoundingClientRect();
 			let dx = event.touches[0].clientX - rect.left - rect.width/2;
 			let dy = event.touches[0].clientY - rect.top - rect.height/2;
-			let rawAngle = (Math.PI + Math.atan2(-dx, -dy)) * 180 / Math.PI;
-			if ((rawAngle >= this.motorArgs.minAngle) && (rawAngle <= this.motorArgs.maxAngle)) {
-				this.motorArgs.angle = rawAngle;
-				this.virtualMotor.updatePosition(this.motorArgs.motorid - 1, this.motorArgs.angle);
+			let rawAngle = Math.atan2(dx, -dy) * 180 / Math.PI;
+			let delta = rawAngle - StepperMotor.mod(this.motorArgs.angle, 360);
+			if (Math.abs(delta) >= 180) {
+				delta += 360 * (-delta/Math.abs(delta));
 			}
-			ServoMotor.drawHorn(this._hornContext, this.motorArgs);
+			this.motorArgs.angle += delta;
+			this.virtualMotor.updatePosition(this.motorArgs.motorid, this.motorArgs.angle/360*200*32);
+			StepperMotor.drawHorn(this._hornContext, this.motorArgs);
 		}
 	}
 
@@ -81,7 +87,7 @@ class ServoMotor {
 		ctx.lineWidth = 1;
 
 		ctx.beginPath();
-		for (let angle = 0; angle <= 180; angle += 5) {
+		for (let angle = 0; angle <= 360; angle += 5) {
 			let lineLength = angle % 45 == 0 ? 15 : 10;
 			ctx.save();
 			ctx.rotate(angle * Math.PI / 180);
@@ -92,13 +98,17 @@ class ServoMotor {
 		ctx.stroke();
 	}
 
+	static mod(n, m) {
+		return ((n % m) + m) % m;
+	}
+
 	static drawHorn(ctx, motor) {
 		ctx.setTransform(1, 0, 0, 1, 0, 0);
 		ctx.clearRect(0, 0, ctx.canvas.clientWidth, ctx.canvas.clientHeight);
 		ctx.save();
 
 		ctx.translate(motor.x,motor.y);
-		ctx.rotate((-motor.angle+90)*Math.PI/180);
+		ctx.rotate((motor.angle-90)*Math.PI/180);
 
 		ctx.beginPath();
 		ctx.strokeStyle = "#000000";
@@ -138,64 +148,44 @@ class ServoMotor {
 		ctx.scale(motor.scale, motor.scale);
 
 		ctx.beginPath();
-		ctx.moveTo(21.775-56,20.869-30);
-		ctx.lineTo(70.446-56,20.869-30);
-		ctx.quadraticCurveTo(72.976-56,20.869-30,72.976-56,23.398-30);
-		ctx.lineTo(72.976-56,36.546-30);
-		ctx.quadraticCurveTo(72.976-56,39.075-30,70.446-56,39.075-30);
-		ctx.lineTo(21.775-56,39.075-30);
-		ctx.quadraticCurveTo(19.245-56,39.075-30,19.245-56,36.546-30);
-		ctx.lineTo(19.245-56,23.398-30);
-		ctx.quadraticCurveTo(19.245-56,20.868-30,21.775-56,20.869-30);
-		ctx.moveTo(28.168-56,20.866-30);
-		ctx.lineTo(64.053-56,20.866-30);
-		ctx.quadraticCurveTo(65.160-56,20.866-30,65.160-56,21.973-30);
-		ctx.lineTo(65.160-56,37.970-30);
-		ctx.quadraticCurveTo(65.160-56,39.077-30,64.053-56,39.078-30);
-		ctx.lineTo(28.168-56,39.078-30);
-		ctx.quadraticCurveTo(27.060-56,39.078-30,27.060-56,37.970-30);
-		ctx.lineTo(27.060-56,21.973-30);
-		ctx.quadraticCurveTo(27.060-56,20.866-30,28.168-56,20.866-30);
-		ctx.moveTo(25.116-56,29.972-30);
-		ctx.arc(23.116-56,29.972-30,2.001,0,Math.PI*2,true);
-		ctx.moveTo(71.105-56,29.972-30);
-		ctx.arc(69.105-56,29.972-30,2.001,0,Math.PI*2,true);
-		ctx.moveTo(56.059-56,20.883-30);
-		ctx.translate(56.073-56,29.972-30);
-		ctx.arc(0,0,9.08,-1.572,-2.283185307179586,1);
-		ctx.translate(-9.979,0);
-		ctx.arc(0,0,6.204,-1.105,-Math.PI/2,1);
-		ctx.arc(0,0,6.204,-1.570,-Math.PI,1);
-		ctx.arc(0,0,6.204,-3.141,-Math.PI*1.5,1); 
-		ctx.arc(0,0,6.204,1.569,1.1091150706809816,1);
-		ctx.translate(9.961,0);
-		ctx.arc(0,0,9.089,2.484,Math.PI*1.5,1);
-		ctx.translate(-56.059,-29.972);
-		ctx.moveTo(59.165,29.972);	
-		ctx.arc(56.059,29.972,3.106,0,Math.PI*2,true);
-		ctx.moveTo(47.421,29.972);	
-		ctx.arc(46.110,29.972,1.311,0,Math.PI*2,true);
-		ctx.closePath();
+		ctx.moveTo(-8,-10);
+		ctx.lineTo(8,-10);
+		ctx.lineTo(10,-8);
+		ctx.lineTo(10,8);
+		ctx.lineTo(8,10);
+		ctx.lineTo(-8,10);
+		ctx.lineTo(-10,8);
+		ctx.lineTo(-10,-8);
+		ctx.lineTo(-8,-10);
+		ctx.moveTo(-6.25,7);
+		ctx.arc(-7, 7, .75, 0, Math.PI*2);
+		ctx.moveTo(7.75,7);
+		ctx.arc(7, 7, .75, 0, Math.PI*2);
+		ctx.moveTo(-6.25,-7);
+		ctx.arc(-7, -7, .75, 0, Math.PI*2);
+		ctx.moveTo(7.75,-7);
+		ctx.arc(7, -7, .75, 0, Math.PI*2);
+		ctx.moveTo(5,0);
+		ctx.arc(0, 0, 5, 0, Math.PI*2);
 		ctx.stroke();
 		ctx.restore();
 	}
-	static send(motorNum, angle) {
-		var command = {
-			code : "G",
+
+	static setMicroStepping(flag) {
+	let out = {
+		commands : [{
+			code : "U",
 			data : [
-				motorNum,
+				motor1.motorid,
 				0,
-				Math.round(angle),
-				1000
+				flag ? 1 : 0,
+				0
 			]
-		};
-		var out = {
-			commands : [command]
-		};
-		
-		var httpRequest = new XMLHttpRequest();
-		httpRequest.open("POST", "/", true);
-		httpRequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		httpRequest.send(JSON.stringify(out));
-	}
+		}]
+	};
+	let httpRequest = new XMLHttpRequest();
+	httpRequest.open("POST", "/", true);
+	httpRequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	httpRequest.send(JSON.stringify(out));
+}
 }

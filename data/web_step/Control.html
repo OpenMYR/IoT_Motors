@@ -1,0 +1,28 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+ 	<link rel="stylesheet" href="css/styles.css">
+</head>
+<body height="100%">
+	<div class="flat">
+		<div class="btn-group topbar">
+			<button type="button" onclick="window.location.href='Control.html'">Control</button> 
+			<button type="button" onclick="window.location.href='Schedule.html'">Schedule</button> 
+			<img class="top-logo" src="assets/logoText.svg">
+			<button type="button" onclick="window.location.href='Config.html'">Config</button> 
+			<button type="button" onclick="window.location.href='About.html'">About</button> 
+		</div>
+	</div>
+	<div class="wrapper centerx size500">
+			<canvas id="motorCanvas" class="overlap-canvas size500 layer0" width="500" height="500">
+			</canvas>
+			<canvas id="angleCanvas" class="overlap-canvas size500 layer1" width="500" height="500">
+			</canvas>
+			<canvas id="hornCanvas" class="overlap-canvas size500 layer2" width="500" height="500">
+			</canvas>
+	</div>
+	<script src="./VirtualMotor.js"></script>
+	<script src="./StepperMotor.js"></script>
+	<script src="./control.js"></script>
+</body>
+</html>

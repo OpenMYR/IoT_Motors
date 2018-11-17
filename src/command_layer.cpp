@@ -161,7 +161,7 @@ void command_layer::json_process_command(const char *json_input)
 						case 'L':
 						{
 							JsonArray& dataArray = cmd["data"];
-							if(dataArray.size() != 3)
+							if(dataArray.size() != 4)
 							{
 								Serial.println("Malformed data array!");
 								continue;
@@ -253,20 +253,26 @@ void command_layer::issue_command(uint8_t motor_id)
     }
     else if(current_command[motor_id].opcode == 'U')
     {
+		stepper_command_packet backup = current_command[motor_id];
 		if(!current_command[motor_id].queue)
 		{
 			issue_stop_packet(motor_id);
 		}
+		current_command[motor_id] = backup;
         motor->change_motor_setting(motor_driver::config_setting::MICROSTEPPING, current_command[motor_id].step_rate , 0);
     }
 	else if(current_command[motor_id].opcode == 'H')
 	{
+		stepper_command_packet backup = current_command[motor_id];
 		issue_stop_packet(motor_id);
+		current_command[motor_id] = backup;
 		motor->change_motor_setting(motor_driver::config_setting::MAX_SERVO_BOUND, current_command[motor_id].step_rate, motor_id);
 	}
 	else if(current_command[motor_id].opcode == 'L')
 	{
+		stepper_command_packet backup = current_command[motor_id];
 		issue_stop_packet(motor_id);
+		current_command[motor_id] = backup;
 		motor->change_motor_setting(motor_driver::config_setting::MIN_SERVO_BOUND, current_command[motor_id].step_rate, motor_id);
 	}
 }

@@ -62,26 +62,32 @@ let motor4 = {
 	hornLength: 100 
 };
 
+let vm = new VirtualMotor({
+	traverseSpeed : 500,
+	transmitInterval : 50,
+	motorPositions : [90, 90, 90, 90]
+});
+
 let sm = new ServoMotor({
 	motorCanvas : motorCanvas,
 	angleCanvas : angleCanvas,
 	hornCanvas : hornCanvas,
-}, motor1);
+}, motor1, vm);
 
 let sm2 = new ServoMotor({
 	motorCanvas : motorCanvas2,
 	angleCanvas : angleCanvas2,
 	hornCanvas : hornCanvas2,
-}, motor2);
+}, motor2, vm);
 
 let sm3 = new ServoMotor({
 	motorCanvas : motorCanvas3,
 	angleCanvas : angleCanvas3,
 	hornCanvas : hornCanvas3,
-}, motor3);
+}, motor3, vm);
 
 let sm4 = new ServoMotor({
 	motorCanvas : motorCanvas4,
 	angleCanvas : angleCanvas4,
 	hornCanvas : hornCanvas4,
-}, motor4);
+}, motor4, vm);

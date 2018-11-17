@@ -1,0 +1,74 @@
+<html>
+<head>
+	<title>Motor Control</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body height="100%">
+	<div class="flat">
+		<div class="btn-group topbar">
+			<button type="button" onclick="window.location.href='Control.html'">Control</button> 
+			<button type="button" onclick="window.location.href='Schedule.html'">Schedule</button> 
+			<img class="top-logo" src="assets/logoText.svg">
+			<button type="button" onclick="window.location.href='Config.html'">Config</button> 
+			<button type="button" onclick="window.location.href='About.html'">About</button> 
+		</div>
+	</div>
+		<div class="wrap">
+			<div class="spaced display-panel vertical-padding">
+				<div class="center-text">
+					<b id ="commandDisplay">Please select a command</b>
+				</div>
+				<div class="even-spaced">
+					<button id="cr0" class="b2 no-radius" onclick="modeSelected(0)">Move</button>
+					<button id="cr1" class="b2 no-radius" onclick="modeSelected(1)">Goto</button>
+					<button id="cr2" class="b2 no-radius" onclick="modeSelected(2)">Stop</button>
+				</div>
+				<div class="even-spaced">
+					<label id="amount" class="margin">Degrees</label>
+					<input id="angleInput" value="0" type="input" readonly="true" style="width:100px; background-color: #c3c3c3;">
+				</div>
+				<div class="even-spaced">
+					<label id="speed" class="margin">Degrees/Sec</label>
+					<input id="speedAngleInput" value="0" type="input" readonly="true" style="width:100px; background-color: #c3c3c3;">
+				</div>
+
+				<div class="even-spaced">
+					<label class="margin">Duration</label>
+					<input id="duration" value="0 Seconds" type="input" readonly="true" style="width:100px; background-color: #c3c3c3;">
+				</div>
+				<div class="even-spaced">
+					<label>Unit: </label>
+					<button id="unitDegree" class="b2 no-radius" onclick="unitSelected(0)" style="background-color:#157e15;color:#fff;">Degrees</button>
+					<button id="unitStep" class="b2 no-radius" onclick="unitSelected(1)">Steps</button>
+				</div>
+				<div class="even-spaced">
+					<label>Enable Micro-Stepping: </label>
+					<input type="checkbox" id="microStepCheckbox"">
+				</div>
+				<div class="center-text">
+					<input id="add" class="b2 no-radius" type="button" value="Add to Queue">
+				</div>
+
+			</div>
+			<div class="spaced table-panel">	
+				<button id="clear" class="left b2 no-radius" onclick="clearQueue()">Clear Queue</button>
+				<button id="march" class="middle b2 no-radius" onclick="imperialMarch()">Imperial March</button>
+				<button id="execute" class="right b2 no-radius">Run Queue</button>
+				<table class="table-normal">
+					<thead>
+						<tr>
+							<td>Command</td>
+							<td>Step Num</td>
+							<td>At Speed</td>
+						</tr>
+					</thead>
+					<tbody id="body">
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</body>
+<script src="./schedule.js"></script>
+</html>
