@@ -1,0 +1,42 @@
+<html>
+<head>
+	<title>Motor Configuration</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body height="100%" >
+	<div class="flat">
+		<div class="btn-group topbar">
+			<button type="button" onclick="window.location.href='Control.html'">Control</button> 
+			<button type="button" onclick="window.location.href='Schedule.html'">Schedule</button> 
+			<img class="top-logo" src="assets/logoText.svg">
+			<button type="button" onclick="window.location.href='Config.html'">Config</button> 
+			<button type="button" onclick="window.location.href='About.html'">About</button> 
+		</div>
+	</div>
+	<div class="wrap">
+		<div class="display-panel">
+			<h2>Join a New Network</h2>
+			<div class="container">
+				<form>
+					Network Name: <input id="ssid" type="text" name="ssid"><br><br>
+					Network Password: <input id="pass" type="password" name="pass"><br><br>
+					<input id="connect" type="button" value="Connect" style="width:100px">
+					<input id="disconnect" type="button" value="Disconnect" style="width:100px">
+				</form>
+			</div>
+			<h2>Change OTA Password</h2>
+			<div class="container">
+				<form>
+					Old OTA Password: <input id="oldOTAPass" type="password"><br><br>
+					New OTA Password: <input id="newOTAPass1" type="password"><br><br>
+					Confirm Password: <input id="newOTAPass2" type="password"><br><br>
+					<input id="change" type="button" value="Change" style="width:100px">
+				</form>
+			</div>
+			<p id="footer">Go to <a href="http://www.OpenMYR.com/">OpenMYR.com</a> for more info</p>
+		</div>
+	</div>
+</body>
+<script src="./config.js"></script>
+</html>
