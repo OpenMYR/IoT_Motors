@@ -18,8 +18,10 @@ class motor_driver
         };
 
         virtual void opcode_move(signed int step_num, unsigned short step_rate, uint8_t motor_id);
+        virtual void opcode_move_cont(signed int step_num, unsigned short step_rate, uint8_t motor_id);
         virtual void opcode_goto(signed int step_num, unsigned short step_rate, uint8_t motor_id);
         virtual void opcode_stop(signed int wait_time, unsigned short precision, uint8_t motor_id);
+
 
         virtual bool is_motor_running(uint8_t motor_id);
         

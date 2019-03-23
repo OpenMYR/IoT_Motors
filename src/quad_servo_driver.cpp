@@ -34,6 +34,14 @@ void quad_servo_driver::opcode_move(signed int step_num, unsigned short step_rat
     }
 }
 
+// Not implemented
+void quad_servo_driver::opcode_move_cont(signed int wait_time, unsigned short precision, uint8_t motor_id)
+{
+    
+    
+
+}
+
 void quad_servo_driver::opcode_goto(signed int step_num, unsigned short step_rate, uint8_t motor_id)
 {
     //if new location is in range, set the goal, oterwise preserve current goal

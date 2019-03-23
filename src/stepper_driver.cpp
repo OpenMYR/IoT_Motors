@@ -131,6 +131,30 @@ void stepper_driver::opcode_move(signed int step_num, unsigned short step_rate, 
     }
 }
 
+
+void stepper_driver::opcode_move_cont(signed int step_num, unsigned short step_rate, uint8_t motor_id)
+{
+    if(endstop_a || endstop_b)
+        return;
+
+    stopWaveform();
+    
+    uint32_t limit = abs(step_num);
+    direction = step_num > 0 ? 1 : 0;
+    digitalWrite(GPIO_STEP_DIR, direction);
+    if(limit > 0)
+    {
+        command_done = 0;
+        startWaveformContinuous(10, (1 / ((float)step_rate) * 1000000) - 10, limit, 1);
+    }
+    else
+    {
+        command_done = 1;
+        system_os_post(ACK_TASK_PRIO, 0, 0);
+    }
+}
+
+
 void stepper_driver::opcode_goto(signed int step_num, unsigned short step_rate, uint8_t motor_id)
 {
     if(endstop_a || endstop_b)

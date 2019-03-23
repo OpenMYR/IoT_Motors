@@ -131,6 +131,7 @@ void command_layer::json_process_command(const char *json_input)
 							wifi_process_command(parsed_wifi_command, dummy_ip);
 							}break;
 						case 'M':
+						case 'm':
 						case 'S':
 						case 'G':
 						{
@@ -239,41 +240,47 @@ void command_layer::fetch_command(uint8_t motor_id)
 
 void command_layer::issue_command(uint8_t motor_id)
 {
-    if(current_command[motor_id].opcode == 'S')
-    {
+	stepper_command_packet backup;
+	switch(current_command[motor_id].opcode){
+		case 'S':
         motor->opcode_stop(current_command[motor_id].step_num, current_command[motor_id].step_rate, motor_id);
-    }
-    else if(current_command[motor_id].opcode == 'M')
-    {
+		break;
+		case 'M':
         motor->opcode_move(current_command[motor_id].step_num, current_command[motor_id].step_rate, motor_id);
-    }
-    else if(current_command[motor_id].opcode == 'G')
-    {
+		break;
+		case 'm':
+        motor->opcode_move_cont(current_command[motor_id].step_num, current_command[motor_id].step_rate, motor_id);	
+		break;
+		case 'G':
         motor->opcode_goto(current_command[motor_id].step_num, current_command[motor_id].step_rate, motor_id);
-    }
-    else if(current_command[motor_id].opcode == 'U')
-    {
-		stepper_command_packet backup = current_command[motor_id];
+		break;
+		case 'U':
+		backup = current_command[motor_id];
 		if(!current_command[motor_id].queue)
 		{
 			issue_stop_packet(motor_id);
 		}
 		current_command[motor_id] = backup;
         motor->change_motor_setting(motor_driver::config_setting::MICROSTEPPING, current_command[motor_id].step_rate , 0);
-    }
-	else if(current_command[motor_id].opcode == 'H')
-	{
-		stepper_command_packet backup = current_command[motor_id];
+    
+		break;
+		case 'H':
+		backup = current_command[motor_id];
 		issue_stop_packet(motor_id);
 		current_command[motor_id] = backup;
 		motor->change_motor_setting(motor_driver::config_setting::MAX_SERVO_BOUND, current_command[motor_id].step_rate, motor_id);
-	}
-	else if(current_command[motor_id].opcode == 'L')
-	{
-		stepper_command_packet backup = current_command[motor_id];
+	
+		break;
+		case 'L':
+		backup = current_command[motor_id];
 		issue_stop_packet(motor_id);
 		current_command[motor_id] = backup;
 		motor->change_motor_setting(motor_driver::config_setting::MIN_SERVO_BOUND, current_command[motor_id].step_rate, motor_id);
+	
+		break;
+		default:
+		// N/A
+		break;
 	}
 }
 
@@ -282,6 +289,7 @@ void command_layer::motor_drv_isr()
     motor->driver();
 }
 
+// Clear queue and stop motor_id
 void command_layer::issue_stop_packet(uint8_t motor_id)
 {
 	command_queue.clear_queue(motor_id);
