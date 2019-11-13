@@ -78,7 +78,7 @@ void setup() {
     }
   });
 
-  MDNS.begin("openmyr");
+  //MDNS.begin("openmyr");
 
    if (!SPIFFS.begin())
   {
@@ -118,7 +118,7 @@ void handlePost(AsyncWebServerRequest* req)
 {
   Serial.println("POST DETECTED");
   Serial.printf("%d params\n", req->params());
-  for(int i = 0; i < req->params(); i++)
+  for(unsigned int i = 0; i < req->params(); i++)
   {
     command_layer::json_process_command(req->getParam(i)->value().c_str());
   }

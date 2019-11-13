@@ -17,7 +17,7 @@ motor_driver* command_layer::motor = nullptr;
 Ticker command_layer::motor_drv_timer;
 op_queue command_layer::command_queue;
 bool command_layer::ota_active = false;
-StaticJsonBuffer<JSON_OBJECT_SIZE(100)> command_layer::jsonBuf;
+StaticJsonDocument<JSON_OBJECT_SIZE(100)> command_layer::jsonBuf;
 std::function<void(command_response_packet&)> command_layer::ack_func;
 
 command_layer::command_layer()
@@ -87,21 +87,22 @@ void command_layer::json_process_command(const char *json_input)
 		
 	Serial.println(json_input);
 
-	JsonObject& commandObj = jsonBuf.parse(json_input);
-	if(commandObj.success())
+	jsonBuf.add(json_input);
+	auto deserial_err = deserializeJson(jsonBuf, json_input);
+	if(!deserial_err)
 	{
 		Serial.println("Object parsed!");
 		
-		JsonArray& commandArray = commandObj["commands"];
+		JsonArray commandArray = jsonBuf["commands"];
 
-		if(commandArray != JsonArray::invalid())
+		if(!commandArray.isNull())
 		{
 			Serial.println("Command array found!");
 			Serial.printf("There are %d commands!\n", commandArray.size());
-			for(int i = 0; i < commandArray.size(); i++)
+			for(unsigned int i = 0; i < commandArray.size(); i++)
 			{
-				JsonObject& cmd = commandArray[i];
-				if(cmd.success() && cmd.containsKey("code") && cmd.containsKey("data"))
+				JsonObject cmd = commandArray[i];
+				if(!cmd.isNull() && cmd.containsKey("code") && cmd.containsKey("data"))
 				{
 					const char* code = cmd["code"];
 
@@ -112,7 +113,7 @@ void command_layer::json_process_command(const char *json_input)
 						case 'D':
 						case 'O':
 						{
-							JsonArray& dataArray = cmd["data"];
+							JsonArray dataArray = cmd["data"];
 							if(dataArray.size() != 2)
 							{
 								Serial.println("Malformed data array!");
@@ -134,7 +135,7 @@ void command_layer::json_process_command(const char *json_input)
 						case 'S':
 						case 'G':
 						{
-							JsonArray& dataArray = cmd["data"];
+							JsonArray dataArray = cmd["data"];
 							if(dataArray.size() != 4)
 							{
 								Serial.println("Malformed data array!");
@@ -160,7 +161,7 @@ void command_layer::json_process_command(const char *json_input)
 						case 'H':
 						case 'L':
 						{
-							JsonArray& dataArray = cmd["data"];
+							JsonArray dataArray = cmd["data"];
 							if(dataArray.size() != 4)
 							{
 								Serial.println("Malformed data array!");

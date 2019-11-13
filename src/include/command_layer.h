@@ -41,5 +41,5 @@ class command_layer
 
         static std::function<void(command_response_packet&)> ack_func;
 
-        static StaticJsonBuffer<JSON_OBJECT_SIZE(100)> jsonBuf;
+        static StaticJsonDocument<JSON_OBJECT_SIZE(100)> jsonBuf;
 };

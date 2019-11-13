@@ -9,6 +9,10 @@
 static uint32_t num_retries = 0;
 static String ap_ssid = "OpenMYR-Motor-";
 
+IPAddress local_IP(192,168,4,1);
+IPAddress gateway(192,168,4,1);
+IPAddress subnet(255,255,255,0);
+
 WiFiEventHandler stationDisconnectHandler;
 WiFiEventHandler stationGotIPHandler;
 
@@ -33,7 +37,7 @@ void wifiStationGotIPHandler(const WiFiEventStationModeGotIP& evt)
   Serial.println(WiFi.localIP());
 }
 
-void change_opmode(bool station, char* ssid, char* pass)
+void change_opmode(bool station, const char* ssid, const char* pass)
 {
     if(station)
     {
@@ -43,6 +47,7 @@ void change_opmode(bool station, char* ssid, char* pass)
     else
     {
         WiFi.mode(WIFI_AP);
+        WiFi.softAPConfig(local_IP, gateway, subnet);
         WiFi.softAP(ap_ssid.c_str());
     }
 }
@@ -65,6 +70,7 @@ void init_wifi()
         case WIFI_OFF:
         case WIFI_AP:
         case WIFI_AP_STA:
+            WiFi.softAPConfig(local_IP, gateway, subnet);
             WiFi.softAP(ap_ssid.c_str());
             break;
         case WIFI_STA:
