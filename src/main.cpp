@@ -38,7 +38,6 @@ void setup() {
   system_os_task(estop_task_ptr, ESTOP_TASK_PRIO, task_queue::queue, TASK_QUEUE_LENGTH);
       Serial.begin(115200);
   Serial.println("Booting");
-  command_layer::init_motor_driver();
 
   init_wifi();
 
@@ -106,6 +105,7 @@ void setup() {
   UDP_server->begin();
 
   ArduinoOTA.begin();
+  command_layer::init_motor_driver();
 }
 
 void loop() {
@@ -118,7 +118,7 @@ void handlePost(AsyncWebServerRequest* req)
 {
   Serial.println("POST DETECTED");
   Serial.printf("%d params\n", req->params());
-  for(unsigned int i = 0; i < req->params(); i++)
+  for(size_t i = 0; i < req->params(); i++)
   {
     command_layer::json_process_command(req->getParam(i)->value().c_str());
   }

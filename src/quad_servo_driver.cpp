@@ -71,6 +71,11 @@ void quad_servo_driver::opcode_stop(signed int wait_time, unsigned short precisi
     }
 }
 
+void quad_servo_driver::opcode_home(signed int step_num, unsigned short step_rate, uint8_t motor_id)
+{
+        system_os_post(ACK_TASK_PRIO, motor_id, 0); 
+}
+
 bool quad_servo_driver::is_motor_running(uint8_t motor_id)
 {
     return !command_done[motor_id];

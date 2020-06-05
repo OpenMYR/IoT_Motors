@@ -134,6 +134,7 @@ void command_layer::json_process_command(const char *json_input)
 						case 'M':
 						case 'S':
 						case 'G':
+						case '1':
 						{
 							JsonArray dataArray = cmd["data"];
 							if(dataArray.size() != 4)
@@ -275,6 +276,10 @@ void command_layer::issue_command(uint8_t motor_id)
 		issue_stop_packet(motor_id);
 		current_command[motor_id] = backup;
 		motor->change_motor_setting(motor_driver::config_setting::MIN_SERVO_BOUND, current_command[motor_id].step_rate, motor_id);
+	}
+	else if(current_command[motor_id].opcode == '1')
+	{
+        motor->opcode_home(current_command[motor_id].step_num, current_command[motor_id].step_rate, motor_id);
 	}
 }
 
