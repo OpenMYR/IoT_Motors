@@ -1,4 +1,6 @@
-# IoT_Motors
+# IoT_Motor Firmware 
+by [OpenMYR](http://www.OpenMYR.com/) 
+
 OpenMYR WiFi motors can be controled via WiFi, or programed with an Arduino sketch. At the core of the system is an Espressif ESP8266.
 
 This project utilizes PlatformIO with Visual Studio Code
@@ -6,6 +8,13 @@ This project utilizes PlatformIO with Visual Studio Code
 Use with [ESP12-Hobby-Servo (ESP12E.3)](https://github.com/OpenMYR/ESP12E.3), [ESP12-Stepper (ESP12E.6))](https://github.com/OpenMYR/ESP12E.6), or with your own ESP8266 boards.
 
 ***
+
+## Driver Support
+* An array of up to 4 180-degree servo motors
+* Stepper motor
+
+***
+
 ## Installation 
 
 1. [Install PlatformIO and Visual Studio Code](https://platformio.org/install/ide?install=vscode)
