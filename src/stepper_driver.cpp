@@ -17,8 +17,7 @@ uint32_t direction = 0;
 uint32_t paused = 0;
 int32_t location = 0;
 uint32_t command_done = 1;
-
-//stepper_driver *stepper_driver::instance = NULL;
+stepper_driver *stepper_driver::instance = NULL;
 
 uint32_t static debounceTimeMs = MYR_DEFAULT_DEBOUNCE_MS; // millis // TODO: NVS config
 bool const isEndstopTrippedHigh = false;                  // Value of endstop when it is engaged.                                       // Max Home
@@ -32,10 +31,10 @@ uint32_t volatile numberOfEndstopBIsr = 0;
 bool lastStateEndstopBIsr = 0;
 uint32_t volatile debounceTimeoutEndstopBIsr = 0;
 
-static uint32_t HOMING_RATE = 6400 / 3;                       // 6400 uSteps per revolution, move at 1/3 rps
-static const int32_t HOMING_ENDSTOP_SEEK_STEPS = 19200;        // 3 revolutions
-static const uint32_t HOMING_ENDSTOP_RELEASE_STEPS = 45;       // move about 2 degrees off endstop
-static const uint32_t HOMING_ENDSTOP_SAFE_OFFSET_STEPS = 0; // move about 90 degrees off endstop
+static uint32_t HOMING_RATE = 6400 / 3;
+static const int32_t HOMING_ENDSTOP_SEEK_STEPS = 19200;
+static const uint32_t HOMING_ENDSTOP_RELEASE_STEPS = 250;
+static uint32_t homing_endstop_safe_offset_steps = 0;
 
 enum homeState
 {
@@ -55,11 +54,19 @@ enum homeMode
     thoroughSlowHome = 4
 };
 
+enum endstopMode
+{
+    none = 0,
+    machineProtection = 1,
+    homeIndicator = 2
+};
+
 //homeState homeMinState = notHomed;
 //homeMode homeMinMode = simpleQuickHome;
 //homeState homeMaxState = stepper_driver::notHomed;
 //homeMode homeMaxMode   = stepper_driver::noHome;
 static volatile homeState homeActiveState = notHomed;
+static const endstopMode motorEndstopMode = endstopMode::machineProtection;
 
 extern "C"
 {
@@ -101,7 +108,7 @@ extern "C"
             homeActiveState = moveToSoftHome; // Move to software home position
 
             digitalWrite(GPIO_STEP_DIR, 1); // Forward
-            startWaveform(10, (1 / ((float)HOMING_RATE) * 1000000) - 10, HOMING_ENDSTOP_SAFE_OFFSET_STEPS);
+            startWaveform(10, (1 / ((float)HOMING_RATE) * 1000000) - 10, homing_endstop_safe_offset_steps);
             break;
         case moveToSoftHome:
 
@@ -176,6 +183,16 @@ stepper_driver::stepper_driver() : motor_driver()
     endstop_a_interrupt();
     endstop_b_interrupt();
     isEndstopTripped();
+}
+
+stepper_driver *IRAM_ATTR stepper_driver::getInstance()
+{
+    if (instance == NULL)
+    {
+        instance = new stepper_driver();
+    }
+
+    return instance;
 }
 
 void stepper_driver::init_motor_gpio()
@@ -304,18 +321,11 @@ void stepper_driver::opcode_home(signed int step_num, unsigned short step_rate, 
     command_done = 0;
     digitalWrite(GPIO_USTEP_A, 1);
 
-    // Are we already engaged with endstop?
-    if (isEndstopA_ActiveNow)
-    {
-        homeActiveState = homeState::foundEndstop;
-        service_home_command();
-    }
-    else
-    { // Move and engage endstop
-        homeActiveState = homeState::seekingEndstop;
-        digitalWrite(GPIO_STEP_DIR, 0); // Reverse
-        startWaveform(10, (1 / ((float)HOMING_RATE) * 1000000) - 10, HOMING_ENDSTOP_SEEK_STEPS);
-    }
+    // Move and engage endstop
+    homeActiveState = homeState::seekingEndstop;
+    digitalWrite(GPIO_STEP_DIR, 0); // Reverse
+    startWaveform(10, (1 / ((float)HOMING_RATE) * 1000000) - 10, HOMING_ENDSTOP_SEEK_STEPS);
+    
 }
 
 #pragma endregion
@@ -350,9 +360,9 @@ void stepper_driver::change_motor_setting(config_setting setting, uint32_t data1
 
 void IRAM_ATTR stepper_driver::checkLocation()
 {
-    if (isEndstopTripped())
+    if (isEndstopTripped(true))
     {
-        if ((homeActiveState == homeState::finished) || (homeActiveState == homeState::notHomed))
+        if (isEndstopTripped() && ((homeActiveState == homeState::finished) || (homeActiveState == homeState::notHomed)))
         {
             stopWaveform();
             command_done = true;
@@ -374,7 +384,7 @@ void IRAM_ATTR stepper_driver::checkLocation()
     }
 }
 
-bool IRAM_ATTR stepper_driver::isEndstopTripped()
+bool IRAM_ATTR stepper_driver::isEndstopTripped(bool rawState)
 {
     uint32_t saveDebounceTimeout;
     bool saveLastState;
@@ -438,5 +448,21 @@ bool IRAM_ATTR stepper_driver::isEndstopTripped()
 
     retunValue |= isEndstopB_ActiveNow;
 
+    if(!rawState && ((motorEndstopMode == endstopMode::none) || (motorEndstopMode == endstopMode::homeIndicator)))
+    {
+        retunValue = 0;
+    }
+
     return retunValue;
+}
+
+bool IRAM_ATTR stepper_driver::isEndstopTripped()
+{
+    isEndstopTripped(false);
+}
+
+uint32_t stepper_driver::set_machine_software_microSteps_offset(uint32_t offset)
+{
+    homing_endstop_safe_offset_steps = offset;
+    return homing_endstop_safe_offset_steps;
 }

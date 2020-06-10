@@ -16,10 +16,14 @@ class stepper_driver : public motor_driver
         void driver();
         void change_motor_setting(config_setting setting, uint32_t data1, uint32_t data2);
         static void checkLocation();
+        static stepper_driver *IRAM_ATTR getInstance();
+        static uint32_t set_machine_software_microSteps_offset(uint32_t offset);
 
     private:
         void init_motor_gpio();
         float calculate_step_incrementor(unsigned short input_step_rate);
+        static bool isEndstopTripped(bool rawState);
         static bool isEndstopTripped();
+        static stepper_driver *instance;
 
 };

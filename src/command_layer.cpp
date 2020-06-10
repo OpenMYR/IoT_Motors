@@ -31,7 +31,7 @@ void command_layer::init_motor_driver()
     	motor = new quad_servo_driver();
     	motor_drv_timer.attach_ms(20,command_layer::motor_drv_isr);
 	#else
-		motor = new stepper_driver();
+		motor = stepper_driver::getInstance();
 	#endif
 }
 

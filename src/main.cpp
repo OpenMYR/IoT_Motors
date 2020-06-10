@@ -11,6 +11,7 @@
 #include "include/task_queue.h"
 #include "include/task_prio.h"
 #include "include/wifi.h"
+#include "include/stepper_driver.h"
 
 AsyncWebServer websrv(80);
 void handlePost(AsyncWebServerRequest* req);
@@ -20,6 +21,10 @@ udp_srv* UDP_server;
 void (*motor_task_ptr)(os_event_t*);
 void (*ack_task_ptr)(os_event_t*);
 void (*estop_task_ptr)(os_event_t*);
+
+#if MOTOR_TYPE == 1
+stepper_driver *motor = stepper_driver::getInstance();
+#endif
 
 extern "C"
 {
