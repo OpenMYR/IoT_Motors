@@ -281,6 +281,13 @@ void command_layer::issue_command(uint8_t motor_id)
 	{
         motor->opcode_home(current_command[motor_id].step_num, current_command[motor_id].step_rate, motor_id);
 	}
+	else if(current_command[motor_id].opcode == '2')
+	{
+		stepper_command_packet backup = current_command[motor_id];
+		issue_stop_packet(motor_id);
+		current_command[motor_id] = backup;
+		motor->change_motor_setting(motor_driver::config_setting::HOMECONFIG, (uint32_t)current_command[motor_id].step_num, (uint32_t)current_command[motor_id].step_rate);
+	}
 }
 
 void command_layer::motor_drv_isr()

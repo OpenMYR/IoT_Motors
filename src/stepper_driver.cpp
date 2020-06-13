@@ -60,6 +60,7 @@ enum endstopMode
     machineProtection = 1,
     homeIndicator = 2
 };
+#define MAX_ENDSTOP_MODE 2
 
 //homeState homeMinState = notHomed;
 //homeMode homeMinMode = simpleQuickHome;
@@ -355,6 +356,18 @@ void stepper_driver::change_motor_setting(config_setting setting, uint32_t data1
     if (setting == config_setting::MICROSTEPPING)
     {
         digitalWrite(GPIO_USTEP_A, data1 > 0);
+    }
+    else if (setting == config_setting::HOMECONFIG)
+    {
+        if(data1 >= 0)
+        {
+            set_machine_software_microSteps_offset(data1);
+        }
+
+        if(data2 <= MAX_ENDSTOP_MODE)
+        {
+            motorEndstopMode = data2;
+        }
     }
 }
 

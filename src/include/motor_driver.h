@@ -14,7 +14,8 @@ class motor_driver
         {
             MIN_SERVO_BOUND,
             MAX_SERVO_BOUND,
-            MICROSTEPPING
+            MICROSTEPPING,
+            HOMECONFIG
         };
 
         virtual void opcode_move(signed int step_num, unsigned short step_rate, uint8_t motor_id);
